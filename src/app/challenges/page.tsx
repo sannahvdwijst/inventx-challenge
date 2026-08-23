@@ -2,11 +2,24 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase";
 import { compressImage } from "@/lib/photo";
 import { getStoredParticipant, StoredParticipant } from "@/lib/participant";
 import { CATEGORY_LABELS, Category, Challenge, Completion } from "@/lib/types";
+import { Badge, computeEarnedBadges } from "@/lib/badges";
 import { Disclaimer } from "@/components/Disclaimer";
+import { BadgeShelf } from "@/components/BadgeShelf";
+import { BadgeToast } from "@/components/BadgeToast";
+
+function fireConfetti(particleCount: number) {
+  confetti({
+    particleCount,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: ["#0058AB", "#1DB8F2", "#121A38"],
+  });
+}
 
 const CATEGORY_ORDER: Category[] = ["networking", "fun_social", "ai", "photo", "party", "bonus"];
 const PHOTO_BUCKET = "challenge-photos";
@@ -25,6 +38,10 @@ export default function ChallengesPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [newBadges, setNewBadges] = useState<Badge[]>([]);
+  const earnedBadgeIdsRef = useRef<Set<string> | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingChallengeRef = useRef<Challenge | null>(null);
@@ -80,6 +97,46 @@ export default function ChallengesPage() {
     return map;
   }, [challenges]);
 
+  const earnedBadges = useMemo(() => {
+    const totalCountByCategory: Partial<Record<Category, number>> = {};
+    const completedCountByCategory: Partial<Record<Category, number>> = {};
+    for (const c of challenges) {
+      totalCountByCategory[c.category] = (totalCountByCategory[c.category] ?? 0) + 1;
+      if (completions.has(c.id)) {
+        completedCountByCategory[c.category] = (completedCountByCategory[c.category] ?? 0) + 1;
+      }
+    }
+    return computeEarnedBadges({
+      totalScore,
+      completedCount: completions.size,
+      totalChallenges: challenges.length,
+      completedCountByCategory,
+      totalCountByCategory,
+    });
+  }, [challenges, completions, totalScore]);
+
+  useEffect(() => {
+    if (challenges.length === 0) return;
+    const currentIds = new Set(earnedBadges.map((b) => b.id));
+
+    if (earnedBadgeIdsRef.current === null) {
+      // First computation after data loads — these are pre-existing badges,
+      // not newly unlocked ones, so don't celebrate them.
+      earnedBadgeIdsRef.current = currentIds;
+      return;
+    }
+
+    const freshlyEarned = earnedBadges.filter((b) => !earnedBadgeIdsRef.current!.has(b.id));
+    earnedBadgeIdsRef.current = currentIds;
+
+    if (freshlyEarned.length > 0) {
+      setNewBadges(freshlyEarned);
+      fireConfetti(freshlyEarned.length > 1 ? 220 : 140);
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = setTimeout(() => setNewBadges([]), 3200);
+    }
+  }, [earnedBadges, challenges.length]);
+
   function startUpload(challenge: Challenge) {
     if (!participant || busyId) return;
     pendingChallengeRef.current = challenge;
@@ -118,6 +175,7 @@ export default function ChallengesPage() {
       if (insertError) throw insertError;
 
       setCompletions((prev) => new Map(prev).set(challenge.id, completion as Completion));
+      fireConfetti(70);
     } catch {
       setError("Couldn't upload that photo. Please try again.");
     } finally {
@@ -178,6 +236,8 @@ export default function ChallengesPage() {
         onChange={handleFileSelected}
       />
 
+      <BadgeToast badges={newBadges} />
+
       <div className="mb-8 rounded-2xl bg-cap-dark-blue p-6 text-white">
         <p className="text-sm text-white/70">Welcome, {participant.name}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
@@ -195,6 +255,9 @@ export default function ChallengesPage() {
               />
             </div>
           </div>
+        </div>
+        <div className="mt-4 border-t border-white/10 pt-4">
+          <BadgeShelf earned={earnedBadges} />
         </div>
       </div>
 

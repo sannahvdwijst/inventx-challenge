@@ -21,3 +21,26 @@ body {
   color: var(--foreground);
   font-family: var(--font-ubuntu), Verdana, sans-serif;
 }
+
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.9);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+.animate-badge-pop {
+  animation: badge-pop 3.2s ease forwards;
+}
