@@ -49,8 +49,8 @@ export default async function LeaderboardPage() {
             )}
           </div>
 
-          <div className="mt-10 overflow-hidden rounded-xl border border-cap-dark-blue/10">
-            <table className="w-full text-left text-sm">
+          <div className="mt-10 overflow-x-auto rounded-xl border border-cap-dark-blue/10">
+            <table className="w-full min-w-[480px] text-left text-sm">
               <thead className="bg-cap-dark-blue text-white">
                 <tr>
                   <th className="px-4 py-3">Rank</th>
