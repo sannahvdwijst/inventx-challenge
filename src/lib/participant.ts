@@ -4,6 +4,7 @@ export type StoredParticipant = {
   id: string;
   name: string;
   team: string | null;
+  department: string;
 };
 
 export function getStoredParticipant(): StoredParticipant | null {

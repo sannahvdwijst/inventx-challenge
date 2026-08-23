@@ -1,21 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/photo";
 import { getStoredParticipant, StoredParticipant } from "@/lib/participant";
-import { CATEGORY_LABELS, Category, Challenge } from "@/lib/types";
+import { CATEGORY_LABELS, Category, Challenge, Completion } from "@/lib/types";
 import { Disclaimer } from "@/components/Disclaimer";
 
 const CATEGORY_ORDER: Category[] = ["networking", "fun_social", "ai", "photo", "party", "bonus"];
+const PHOTO_BUCKET = "challenge-photos";
+
+function storagePathFromUrl(url: string) {
+  const marker = `/object/public/${PHOTO_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  return idx === -1 ? null : url.slice(idx + marker.length);
+}
 
 export default function ChallengesPage() {
   const router = useRouter();
   const [participant, setParticipant] = useState<StoredParticipant | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [completions, setCompletions] = useState<Map<string, Completion>>(new Map());
   const [loading, setLoading] = useState(true);
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const pendingChallengeRef = useRef<Challenge | null>(null);
 
   useEffect(() => {
     const stored = getStoredParticipant();
@@ -35,14 +47,15 @@ export default function ChallengesPage() {
     async function load() {
       const [{ data: challengeData }, { data: completionData }] = await Promise.all([
         supabase.from("challenges").select("*").order("category").order("points"),
-        supabase
-          .from("completions")
-          .select("challenge_id")
-          .eq("participant_id", participant!.id),
+        supabase.from("completions").select("*").eq("participant_id", participant!.id),
       ]);
 
       setChallenges((challengeData as Challenge[]) ?? []);
-      setCompletedIds(new Set((completionData ?? []).map((c) => c.challenge_id as string)));
+      const map = new Map<string, Completion>();
+      for (const c of (completionData as Completion[]) ?? []) {
+        map.set(c.challenge_id, c);
+      }
+      setCompletions(map);
       setLoading(false);
     }
 
@@ -52,9 +65,9 @@ export default function ChallengesPage() {
   const totalScore = useMemo(
     () =>
       challenges
-        .filter((c) => completedIds.has(c.id))
+        .filter((c) => completions.has(c.id))
         .reduce((sum, c) => sum + c.points, 0),
-    [challenges, completedIds]
+    [challenges, completions]
   );
 
   const grouped = useMemo(() => {
@@ -67,37 +80,82 @@ export default function ChallengesPage() {
     return map;
   }, [challenges]);
 
-  async function toggleChallenge(challenge: Challenge) {
-    if (!participant || pendingId) return;
-    setPendingId(challenge.id);
+  function startUpload(challenge: Challenge) {
+    if (!participant || busyId) return;
+    pendingChallengeRef.current = challenge;
+    fileInputRef.current?.click();
+  }
 
-    const isCompleted = completedIds.has(challenge.id);
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const challenge = pendingChallengeRef.current;
+    if (!file || !challenge || !participant) return;
 
-    if (isCompleted) {
-      const { error } = await supabase
+    setBusyId(challenge.id);
+    setError(null);
+
+    try {
+      const compressed = await compressImage(file);
+      const path = `${participant.id}/${challenge.id}-${crypto.randomUUID()}.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(path, compressed, { contentType: "image/jpeg" });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+
+      const { data: completion, error: insertError } = await supabase
         .from("completions")
-        .delete()
-        .eq("participant_id", participant.id)
-        .eq("challenge_id", challenge.id);
+        .insert({
+          participant_id: participant.id,
+          challenge_id: challenge.id,
+          photo_url: publicUrlData.publicUrl,
+        })
+        .select()
+        .single();
+      if (insertError) throw insertError;
 
-      if (!error) {
-        setCompletedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(challenge.id);
-          return next;
-        });
+      setCompletions((prev) => new Map(prev).set(challenge.id, completion as Completion));
+    } catch {
+      setError("Couldn't upload that photo. Please try again.");
+    } finally {
+      setBusyId(null);
+      pendingChallengeRef.current = null;
+    }
+  }
+
+  async function removeCompletion(challenge: Challenge) {
+    if (!participant || busyId) return;
+    const completion = completions.get(challenge.id);
+    if (!completion) return;
+    if (!window.confirm("Remove this completed challenge and its photo?")) return;
+
+    setBusyId(challenge.id);
+    setError(null);
+
+    const { error: deleteError } = await supabase
+      .from("completions")
+      .delete()
+      .eq("participant_id", participant.id)
+      .eq("challenge_id", challenge.id);
+
+    if (!deleteError) {
+      if (completion.photo_url) {
+        const path = storagePathFromUrl(completion.photo_url);
+        if (path) await supabase.storage.from(PHOTO_BUCKET).remove([path]);
       }
+      setCompletions((prev) => {
+        const next = new Map(prev);
+        next.delete(challenge.id);
+        return next;
+      });
     } else {
-      const { error } = await supabase
-        .from("completions")
-        .insert({ participant_id: participant.id, challenge_id: challenge.id });
-
-      if (!error) {
-        setCompletedIds((prev) => new Set(prev).add(challenge.id));
-      }
+      setError("Couldn't remove that challenge. Please try again.");
     }
 
-    setPendingId(null);
+    setBusyId(null);
   }
 
   if (!participant || loading) {
@@ -108,17 +166,25 @@ export default function ChallengesPage() {
     );
   }
 
-  const progress = challenges.length ? completedIds.size / challenges.length : 0;
+  const progress = challenges.length ? completions.size / challenges.length : 0;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
+
       <div className="mb-8 rounded-2xl bg-cap-dark-blue p-6 text-white">
         <p className="text-sm text-white/70">Welcome, {participant.name}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-3xl font-bold">{totalScore} pts</p>
             <p className="text-sm text-white/70">
-              {completedIds.size} / {challenges.length} challenges completed
+              {completions.size} / {challenges.length} challenges completed
             </p>
           </div>
           <div className="w-full max-w-xs sm:w-56">
@@ -136,6 +202,12 @@ export default function ChallengesPage() {
         <Disclaimer />
       </div>
 
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="space-y-10">
         {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => (
           <section key={category}>
@@ -144,16 +216,16 @@ export default function ChallengesPage() {
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {grouped.get(category)!.map((challenge) => {
-                const isCompleted = completedIds.has(challenge.id);
+                const completion = completions.get(challenge.id);
+                const isBusy = busyId === challenge.id;
+
                 return (
-                  <button
+                  <div
                     key={challenge.id}
-                    onClick={() => toggleChallenge(challenge)}
-                    disabled={pendingId === challenge.id}
-                    className={`flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition disabled:opacity-60 ${
-                      isCompleted
+                    className={`flex flex-col gap-2 rounded-xl border p-4 text-left transition ${
+                      completion
                         ? "border-cap-blue bg-cap-blue/10"
-                        : "border-cap-dark-blue/15 bg-white hover:border-cap-blue/40"
+                        : "border-cap-dark-blue/15 bg-white"
                     }`}
                   >
                     <div className="flex w-full items-start justify-between gap-2">
@@ -165,14 +237,43 @@ export default function ChallengesPage() {
                     {challenge.description && (
                       <p className="text-sm text-cap-dark-blue/60">{challenge.description}</p>
                     )}
-                    <span
-                      className={`mt-1 text-xs font-semibold ${
-                        isCompleted ? "text-cap-blue" : "text-cap-dark-blue/40"
-                      }`}
-                    >
-                      {isCompleted ? "✓ Completed" : "Tap to mark complete"}
-                    </span>
-                  </button>
+
+                    {completion?.photo_url ? (
+                      <div className="mt-1 flex items-center gap-3">
+                        <a
+                          href={completion.photo_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="shrink-0"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={completion.photo_url}
+                            alt={`Evidence for ${challenge.title}`}
+                            className="h-16 w-16 rounded-lg object-cover"
+                          />
+                        </a>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-semibold text-cap-blue">✓ Completed</span>
+                          <button
+                            onClick={() => removeCompletion(challenge)}
+                            disabled={isBusy}
+                            className="text-left text-xs text-cap-dark-blue/50 underline hover:text-red-600 disabled:opacity-50"
+                          >
+                            {isBusy ? "Removing…" : "Remove"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startUpload(challenge)}
+                        disabled={isBusy}
+                        className="mt-1 rounded-lg border border-dashed border-cap-blue/40 px-3 py-2 text-sm font-semibold text-cap-blue hover:bg-cap-blue/5 disabled:opacity-50"
+                      >
+                        {isBusy ? "Uploading…" : "📷 Add photo to complete"}
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>

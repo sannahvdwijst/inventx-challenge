@@ -39,7 +39,10 @@ export default async function LeaderboardPage() {
                     #{i + 1}
                   </p>
                   <p className="mt-1 truncate text-lg font-bold">{p.name}</p>
-                  {p.team && <p className="text-sm opacity-70">{p.team}</p>}
+                  <p className="text-sm opacity-70">
+                    {p.department}
+                    {p.team ? ` · ${p.team}` : ""}
+                  </p>
                   <p className="mt-2 text-2xl font-extrabold">{p.total_score} pts</p>
                   <p className="text-xs opacity-70">{p.challenges_completed} challenges</p>
                 </div>
@@ -50,11 +53,12 @@ export default async function LeaderboardPage() {
           </div>
 
           <div className="mt-10 overflow-x-auto rounded-xl border border-cap-dark-blue/10">
-            <table className="w-full min-w-[480px] text-left text-sm">
+            <table className="w-full min-w-[600px] text-left text-sm">
               <thead className="bg-cap-dark-blue text-white">
                 <tr>
                   <th className="px-4 py-3">Rank</th>
                   <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Department</th>
                   <th className="px-4 py-3">Team</th>
                   <th className="px-4 py-3 text-right">Completed</th>
                   <th className="px-4 py-3 text-right">Score</th>
@@ -65,6 +69,7 @@ export default async function LeaderboardPage() {
                   <tr key={p.id} className="border-t border-cap-dark-blue/10">
                     <td className="px-4 py-3 font-semibold text-cap-dark-blue">{i + 1}</td>
                     <td className="px-4 py-3 text-cap-dark-blue">{p.name}</td>
+                    <td className="px-4 py-3 text-cap-dark-blue/60">{p.department}</td>
                     <td className="px-4 py-3 text-cap-dark-blue/60">{p.team ?? "—"}</td>
                     <td className="px-4 py-3 text-right text-cap-dark-blue/60">
                       {p.challenges_completed}

@@ -4,11 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { setStoredParticipant } from "@/lib/participant";
+import { Department } from "@/lib/types";
+
+const DEPARTMENTS: Department[] = ["Domains", "Invent"];
 
 export function RegisterForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [team, setTeam] = useState("");
+  const [department, setDepartment] = useState<Department | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,13 +23,17 @@ export function RegisterForm() {
       setError("Please enter your name.");
       return;
     }
+    if (!department) {
+      setError("Please select your department.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     const { data, error: insertError } = await supabase
       .from("participants")
-      .insert({ name: trimmedName, team: team.trim() || null })
+      .insert({ name: trimmedName, team: team.trim() || null, department })
       .select()
       .single();
 
@@ -36,7 +44,12 @@ export function RegisterForm() {
       return;
     }
 
-    setStoredParticipant({ id: data.id, name: data.name, team: data.team });
+    setStoredParticipant({
+      id: data.id,
+      name: data.name,
+      team: data.team,
+      department: data.department,
+    });
     router.push("/challenges");
   }
 
@@ -56,6 +69,34 @@ export function RegisterForm() {
           required
         />
       </div>
+
+      <div>
+        <span className="mb-1 block text-sm font-medium text-cap-dark-blue">Department</span>
+        <div className="grid grid-cols-2 gap-3">
+          {DEPARTMENTS.map((dep) => (
+            <label
+              key={dep}
+              className={`flex cursor-pointer items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
+                department === dep
+                  ? "border-cap-blue bg-cap-blue/10 text-cap-blue"
+                  : "border-cap-dark-blue/20 text-cap-dark-blue hover:border-cap-blue/40"
+              }`}
+            >
+              <input
+                type="radio"
+                name="department"
+                value={dep}
+                checked={department === dep}
+                onChange={() => setDepartment(dep)}
+                className="sr-only"
+                required
+              />
+              {dep}
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div>
         <label htmlFor="team" className="mb-1 block text-sm font-medium text-cap-dark-blue">
           Team / domain <span className="font-normal text-cap-dark-blue/50">(optional)</span>

@@ -18,10 +18,13 @@ export type Challenge = {
   created_at: string;
 };
 
+export type Department = "Domains" | "Invent";
+
 export type Participant = {
   id: string;
   name: string;
   team: string | null;
+  department: Department;
   registered_at: string;
 };
 
@@ -30,12 +33,14 @@ export type Completion = {
   participant_id: string;
   challenge_id: string;
   completed_at: string;
+  photo_url: string | null;
 };
 
 export type ParticipantScore = {
   id: string;
   name: string;
   team: string | null;
+  department: Department;
   registered_at: string;
   total_score: number;
   challenges_completed: number;
