@@ -16,7 +16,8 @@ export default async function LeaderboardPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="text-3xl font-bold text-cap-dark-blue">Leaderboard</h1>
-      <p className="mt-1 text-cap-dark-blue/60">Live standings for the InventX Challenge.</p>
+      <div className="gradient-bar mt-2 h-1 w-16 rounded-full" />
+      <p className="mt-3 text-cap-dark-blue/60">Live standings for the InventX Challenge.</p>
 
       {scores.length === 0 ? (
         <p className="mt-10 text-cap-dark-blue/50">
@@ -31,7 +32,7 @@ export default async function LeaderboardPage() {
                   key={p.id}
                   className={`rounded-2xl border p-5 text-center ${
                     i === 0
-                      ? "border-cap-blue bg-cap-blue text-white sm:order-2 sm:scale-105"
+                      ? "bg-stars border-cap-light-blue text-white sm:order-2 sm:scale-105"
                       : "border-cap-dark-blue/15 bg-white text-cap-dark-blue"
                   }`}
                 >

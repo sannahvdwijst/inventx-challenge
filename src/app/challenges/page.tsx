@@ -322,7 +322,7 @@ export default function ChallengesPage() {
 
       <BadgeToast badges={newBadges} />
 
-      <div className="mb-8 rounded-2xl bg-cap-dark-blue p-6 text-white">
+      <div className="bg-stars mb-8 rounded-2xl p-6 text-white">
         <p className="text-sm text-white/70">Welcome, {participant.name}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
