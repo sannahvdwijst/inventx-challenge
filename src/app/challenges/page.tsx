@@ -30,6 +30,19 @@ function storagePathFromUrl(url: string) {
   return idx === -1 ? null : url.slice(idx + marker.length);
 }
 
+async function uploadPhotoToStorage(participantId: string, challengeId: string, file: File) {
+  const compressed = await compressImage(file);
+  const path = `${participantId}/${challengeId}-${crypto.randomUUID()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .upload(path, compressed, { contentType: "image/jpeg" });
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export default function ChallengesPage() {
   const router = useRouter();
   const [participant, setParticipant] = useState<StoredParticipant | null>(null);
@@ -38,6 +51,9 @@ export default function ChallengesPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [textDrafts, setTextDrafts] = useState<Record<string, string>>({});
+  const [stagedFiles, setStagedFiles] = useState<Record<string, File>>({});
 
   const [newBadges, setNewBadges] = useState<Badge[]>([]);
   const earnedBadgeIdsRef = useRef<Set<string> | null>(null);
@@ -137,7 +153,7 @@ export default function ChallengesPage() {
     }
   }, [earnedBadges, challenges.length]);
 
-  function startUpload(challenge: Challenge) {
+  function startFilePick(challenge: Challenge) {
     if (!participant || busyId) return;
     pendingChallengeRef.current = challenge;
     fileInputRef.current?.click();
@@ -147,29 +163,22 @@ export default function ChallengesPage() {
     const file = e.target.files?.[0];
     e.target.value = "";
     const challenge = pendingChallengeRef.current;
+    pendingChallengeRef.current = null;
     if (!file || !challenge || !participant) return;
+
+    if (challenge.proof_type === "both") {
+      // Stage the file — actual submit happens once the text is filled in too.
+      setStagedFiles((prev) => ({ ...prev, [challenge.id]: file }));
+      return;
+    }
 
     setBusyId(challenge.id);
     setError(null);
-
     try {
-      const compressed = await compressImage(file);
-      const path = `${participant.id}/${challenge.id}-${crypto.randomUUID()}.jpg`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .upload(path, compressed, { contentType: "image/jpeg" });
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path);
-
+      const photoUrl = await uploadPhotoToStorage(participant.id, challenge.id, file);
       const { data: completion, error: insertError } = await supabase
         .from("completions")
-        .insert({
-          participant_id: participant.id,
-          challenge_id: challenge.id,
-          photo_url: publicUrlData.publicUrl,
-        })
+        .insert({ participant_id: participant.id, challenge_id: challenge.id, photo_url: photoUrl })
         .select()
         .single();
       if (insertError) throw insertError;
@@ -180,7 +189,82 @@ export default function ChallengesPage() {
       setError("Couldn't upload that photo. Please try again.");
     } finally {
       setBusyId(null);
-      pendingChallengeRef.current = null;
+    }
+  }
+
+  async function completeTextChallenge(challenge: Challenge) {
+    if (!participant || busyId) return;
+    const text = (textDrafts[challenge.id] ?? "").trim();
+    if (!text) {
+      setError("Please fill in the text before completing this challenge.");
+      return;
+    }
+
+    setBusyId(challenge.id);
+    setError(null);
+    try {
+      const { data: completion, error: insertError } = await supabase
+        .from("completions")
+        .insert({ participant_id: participant.id, challenge_id: challenge.id, proof_text: text })
+        .select()
+        .single();
+      if (insertError) throw insertError;
+
+      setCompletions((prev) => new Map(prev).set(challenge.id, completion as Completion));
+      setTextDrafts((prev) => {
+        const next = { ...prev };
+        delete next[challenge.id];
+        return next;
+      });
+      fireConfetti(70);
+    } catch {
+      setError("Couldn't save that. Please try again.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function completeBothChallenge(challenge: Challenge) {
+    if (!participant || busyId) return;
+    const text = (textDrafts[challenge.id] ?? "").trim();
+    const file = stagedFiles[challenge.id];
+    if (!text || !file) {
+      setError("Please add both the text and a photo before completing this challenge.");
+      return;
+    }
+
+    setBusyId(challenge.id);
+    setError(null);
+    try {
+      const photoUrl = await uploadPhotoToStorage(participant.id, challenge.id, file);
+      const { data: completion, error: insertError } = await supabase
+        .from("completions")
+        .insert({
+          participant_id: participant.id,
+          challenge_id: challenge.id,
+          photo_url: photoUrl,
+          proof_text: text,
+        })
+        .select()
+        .single();
+      if (insertError) throw insertError;
+
+      setCompletions((prev) => new Map(prev).set(challenge.id, completion as Completion));
+      setTextDrafts((prev) => {
+        const next = { ...prev };
+        delete next[challenge.id];
+        return next;
+      });
+      setStagedFiles((prev) => {
+        const next = { ...prev };
+        delete next[challenge.id];
+        return next;
+      });
+      fireConfetti(70);
+    } catch {
+      setError("Couldn't save that. Please try again.");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -188,7 +272,7 @@ export default function ChallengesPage() {
     if (!participant || busyId) return;
     const completion = completions.get(challenge.id);
     if (!completion) return;
-    if (!window.confirm("Remove this completed challenge and its photo?")) return;
+    if (!window.confirm("Remove this completed challenge?")) return;
 
     setBusyId(challenge.id);
     setError(null);
@@ -281,6 +365,7 @@ export default function ChallengesPage() {
               {grouped.get(category)!.map((challenge) => {
                 const completion = completions.get(challenge.id);
                 const isBusy = busyId === challenge.id;
+                const stagedFile = stagedFiles[challenge.id];
 
                 return (
                   <div
@@ -301,40 +386,91 @@ export default function ChallengesPage() {
                       <p className="text-sm text-cap-dark-blue/60">{challenge.description}</p>
                     )}
 
-                    {completion?.photo_url ? (
-                      <div className="mt-1 flex items-center gap-3">
-                        <a
-                          href={completion.photo_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={completion.photo_url}
-                            alt={`Evidence for ${challenge.title}`}
-                            className="h-16 w-16 rounded-lg object-cover"
-                          />
-                        </a>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs font-semibold text-cap-blue">✓ Completed</span>
-                          <button
-                            onClick={() => removeCompletion(challenge)}
-                            disabled={isBusy}
-                            className="text-left text-xs text-cap-dark-blue/50 underline hover:text-red-600 disabled:opacity-50"
-                          >
-                            {isBusy ? "Removing…" : "Remove"}
-                          </button>
+                    {completion ? (
+                      <div className="mt-1 flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                          {completion.photo_url && (
+                            <a href={completion.photo_url} target="_blank" rel="noreferrer" className="shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={completion.photo_url}
+                                alt={`Evidence for ${challenge.title}`}
+                                className="h-16 w-16 rounded-lg object-cover"
+                              />
+                            </a>
+                          )}
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs font-semibold text-cap-blue">✓ Completed</span>
+                            <button
+                              onClick={() => removeCompletion(challenge)}
+                              disabled={isBusy}
+                              className="text-left text-xs text-cap-dark-blue/50 underline hover:text-red-600 disabled:opacity-50"
+                            >
+                              {isBusy ? "Removing…" : "Remove"}
+                            </button>
+                          </div>
                         </div>
+                        {completion.proof_text && (
+                          <p className="whitespace-pre-wrap rounded-lg bg-white/70 p-2 text-xs text-cap-dark-blue/70">
+                            {completion.proof_text}
+                          </p>
+                        )}
                       </div>
-                    ) : (
+                    ) : challenge.proof_type === "photo" ? (
                       <button
-                        onClick={() => startUpload(challenge)}
+                        onClick={() => startFilePick(challenge)}
                         disabled={isBusy}
                         className="mt-1 rounded-lg border border-dashed border-cap-blue/40 px-3 py-2 text-sm font-semibold text-cap-blue hover:bg-cap-blue/5 disabled:opacity-50"
                       >
                         {isBusy ? "Uploading…" : "📷 Add photo to complete"}
                       </button>
+                    ) : challenge.proof_type === "text" ? (
+                      <div className="mt-1 flex flex-col gap-2">
+                        <textarea
+                          value={textDrafts[challenge.id] ?? ""}
+                          onChange={(e) =>
+                            setTextDrafts((prev) => ({ ...prev, [challenge.id]: e.target.value }))
+                          }
+                          disabled={isBusy}
+                          rows={2}
+                          placeholder="Type your answer here..."
+                          className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+                        />
+                        <button
+                          onClick={() => completeTextChallenge(challenge)}
+                          disabled={isBusy}
+                          className="rounded-lg bg-cap-blue px-3 py-2 text-sm font-semibold text-white hover:bg-cap-dark-blue disabled:opacity-50"
+                        >
+                          {isBusy ? "Saving…" : "✅ Submit to complete"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-1 flex flex-col gap-2">
+                        <textarea
+                          value={textDrafts[challenge.id] ?? ""}
+                          onChange={(e) =>
+                            setTextDrafts((prev) => ({ ...prev, [challenge.id]: e.target.value }))
+                          }
+                          disabled={isBusy}
+                          rows={2}
+                          placeholder="Type your answer here..."
+                          className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+                        />
+                        <button
+                          onClick={() => startFilePick(challenge)}
+                          disabled={isBusy}
+                          className="rounded-lg border border-dashed border-cap-blue/40 px-3 py-2 text-sm font-semibold text-cap-blue hover:bg-cap-blue/5 disabled:opacity-50"
+                        >
+                          {stagedFile ? `📷 ${stagedFile.name}` : "📷 Attach a photo"}
+                        </button>
+                        <button
+                          onClick={() => completeBothChallenge(challenge)}
+                          disabled={isBusy || !stagedFile || !(textDrafts[challenge.id] ?? "").trim()}
+                          className="rounded-lg bg-cap-blue px-3 py-2 text-sm font-semibold text-white hover:bg-cap-dark-blue disabled:opacity-50"
+                        >
+                          {isBusy ? "Saving…" : "✅ Submit to complete"}
+                        </button>
+                      </div>
                     )}
                   </div>
                 );

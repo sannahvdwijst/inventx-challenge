@@ -8,12 +8,15 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   bonus: "Bonus",
 };
 
+export type ProofType = "photo" | "text" | "both";
+
 export type Challenge = {
   id: string;
   title: string;
   description: string | null;
   category: Category;
   points: number;
+  proof_type: ProofType;
   created_at: string;
 };
 
@@ -33,6 +36,7 @@ export type Completion = {
   challenge_id: string;
   completed_at: string;
   photo_url: string | null;
+  proof_text: string | null;
 };
 
 export type ParticipantScore = {
