@@ -21,7 +21,7 @@ function fireConfetti(particleCount: number) {
   });
 }
 
-const CATEGORY_ORDER: Category[] = ["networking", "fun_social", "ai", "photo", "party", "bonus"];
+const CATEGORY_ORDER: Category[] = ["networking", "fun_social", "photo", "party", "bonus"];
 const PHOTO_BUCKET = "challenge-photos";
 
 function storagePathFromUrl(url: string) {

@@ -52,12 +52,6 @@ const CATEGORY_BADGES: Record<Category, Badge> = {
     label: "Life of the Party",
     description: "Complete every Fun & Social challenge",
   },
-  ai: {
-    id: "cat-ai",
-    emoji: "🤖",
-    label: "AI Whisperer",
-    description: "Complete every AI challenge",
-  },
   photo: {
     id: "cat-photo",
     emoji: "📸",

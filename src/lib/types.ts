@@ -1,9 +1,8 @@
-export type Category = "networking" | "fun_social" | "ai" | "photo" | "party" | "bonus";
+export type Category = "networking" | "fun_social" | "photo" | "party" | "bonus";
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   networking: "Networking",
   fun_social: "Fun & Social",
-  ai: "AI Challenges",
   photo: "Photo Challenges",
   party: "Party Challenges",
   bonus: "Bonus",

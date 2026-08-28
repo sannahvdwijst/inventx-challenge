@@ -1,4 +1,4 @@
--- InventX Challenge — seed data (~50 challenges)
+-- InventX Challenge — seed data (40 challenges)
 -- Run this AFTER 001_init.sql, in Supabase SQL Editor.
 -- Safe to re-run: clears existing challenges first (completions cascade-delete
 -- with them, so only run this before real data is collected).
@@ -26,18 +26,6 @@ insert into challenges (title, description, category, points) values
 ('Creative Parents Bonus', 'If nobody shares your first name, claim this bonus instead.', 'fun_social', 10),
 ('Joined Capgemini this year', 'Find someone who joined the company this year.', 'fun_social', 5),
 ('10+ years at the company', 'Find someone who has worked here for 10 years or more.', 'fun_social', 10),
-
--- AI Challenges
-('AI poem with a stranger', 'Write a funny poem using AI together with someone you don''t know.', 'ai', 15),
-('AI limerick about InventX', 'Create an AI-generated limerick about InventX.', 'ai', 15),
-('Share your favourite AI prompt', 'Share a favourite AI prompt with another participant.', 'ai', 10),
-('Learn a new AI use case', 'Learn a new AI use case from another participant.', 'ai', 10),
-('AI team slogan', 'Create a team slogan using AI.', 'ai', 10),
-('AI image concept', 'Generate a funny AI image concept.', 'ai', 15),
-('AI explains your role', 'Let AI explain your role in one sentence and share it.', 'ai', 10),
-('AI-generated quiz question', 'Create an AI-generated quiz question.', 'ai', 10),
-('AI rap performance', 'Generate an AI rap about InventX and perform a verse.', 'ai', 15),
-('AI LinkedIn headline', 'Have AI write your LinkedIn headline for the day.', 'ai', 10),
 
 -- Photo Challenges
 ('Photobooth with 2 new people', 'Take a photobooth picture with at least 2 people you didn''t know.', 'photo', 15),
