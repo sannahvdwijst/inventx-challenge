@@ -9,9 +9,12 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
             Invent<span className="text-cap-light-blue">X</span>
             <span className="hidden sm:inline"> Challenge</span>
           </Link>
-          <div className="flex gap-3 text-sm font-medium sm:gap-4">
+          <div className="flex gap-2.5 text-xs font-medium sm:gap-4 sm:text-sm">
             <Link href="/challenges" className="hover:text-cap-blue">
               Challenges
+            </Link>
+            <Link href="/gallery" className="hover:text-cap-blue">
+              Gallery
             </Link>
             <Link href="/leaderboard" className="hover:text-cap-blue">
               Leaderboard

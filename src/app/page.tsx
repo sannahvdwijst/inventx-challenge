@@ -36,6 +36,11 @@ export default function SplashPage() {
         >
           Let&apos;s go
         </Link>
+
+        <p className="max-w-xs text-xs text-white/40">
+          By clicking &quot;Let&apos;s go&quot; you agree that photos you upload may be
+          shared with other participants for the day. All photos are deleted after the event.
+        </p>
       </div>
 
       <p className="pb-4 text-xs text-white/40">Capgemini Invent</p>
