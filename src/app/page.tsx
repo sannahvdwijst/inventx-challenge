@@ -6,7 +6,7 @@ export default function SplashPage() {
       className="flex min-h-screen flex-col items-center justify-between overflow-hidden bg-cap-dark-blue px-4 py-10 text-center text-white"
       style={{
         backgroundImage:
-          "linear-gradient(180deg, rgba(18,26,56,0.55) 0%, rgba(18,26,56,0.85) 65%, #121a38 100%), radial-gradient(circle at 50% 30%, #1a2a5c 0%, #121a38 70%), url('/hero.jpg')",
+          "linear-gradient(180deg, rgba(18,26,56,0.35) 0%, rgba(18,26,56,0.55) 55%, rgba(18,26,56,0.92) 100%), url('/hero.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
