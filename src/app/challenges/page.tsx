@@ -11,6 +11,7 @@ import { Badge, computeEarnedBadges } from "@/lib/badges";
 import { Disclaimer } from "@/components/Disclaimer";
 import { BadgeShelf } from "@/components/BadgeShelf";
 import { BadgeToast } from "@/components/BadgeToast";
+import { Carousel3D } from "@/components/Carousel3D";
 
 function fireConfetti(particleCount: number) {
   confetti({
@@ -54,6 +55,8 @@ export default function ChallengesPage() {
 
   const [textDrafts, setTextDrafts] = useState<Record<string, string>>({});
   const [stagedFiles, setStagedFiles] = useState<Record<string, File>>({});
+
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   const [newBadges, setNewBadges] = useState<Badge[]>([]);
   const earnedBadgeIdsRef = useRef<Set<string> | null>(null);
@@ -310,17 +313,16 @@ export default function ChallengesPage() {
 
   const progress = challenges.length ? completions.size / challenges.length : 0;
 
-  function renderCard(challenge: Challenge) {
+  function renderCard(challenge: Challenge, isActive: boolean) {
     const completion = completions.get(challenge.id);
     const isBusy = busyId === challenge.id;
     const stagedFile = stagedFiles[challenge.id];
 
     return (
       <div
-        key={challenge.id}
-        className={`flex w-72 shrink-0 snap-center flex-col gap-2 rounded-2xl border bg-white p-4 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl ${
-          completion ? "border-cap-dark-blue/40 opacity-90" : "border-cap-dark-blue/10"
-        }`}
+        className={`flex h-full w-full flex-col gap-2 overflow-y-auto rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors duration-300 ${
+          completion ? "border-cap-dark-blue/40" : "border-cap-dark-blue/10"
+        } ${isActive ? "ring-2 ring-cap-dark-blue/20" : ""}`}
       >
         <div className="flex w-full items-start justify-between gap-2">
           <span className="font-semibold text-cap-dark-blue">{challenge.title}</span>
@@ -329,7 +331,7 @@ export default function ChallengesPage() {
           </span>
         </div>
         {challenge.description && (
-          <p className="text-sm text-cap-dark-blue/60">{challenge.description}</p>
+          <p className="line-clamp-3 text-sm text-cap-dark-blue/60">{challenge.description}</p>
         )}
 
         {completion ? (
@@ -424,6 +426,13 @@ export default function ChallengesPage() {
     );
   }
 
+  const availableCategories = CATEGORY_ORDER.filter((cat) => grouped.has(cat));
+  const activeCategory =
+    selectedCategory && availableCategories.includes(selectedCategory)
+      ? selectedCategory
+      : availableCategories[0];
+  const activeChallenges = activeCategory ? grouped.get(activeCategory)! : [];
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <input
@@ -436,26 +445,48 @@ export default function ChallengesPage() {
 
       <BadgeToast badges={newBadges} />
 
-      <div className="sticky top-[57px] z-30 mb-8 rounded-2xl bg-cap-dark-blue p-6 text-white shadow-lg">
-        <p className="text-sm text-white/70">Welcome, {participant.name}</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-3xl font-bold">{totalScore} pts</p>
-            <p className="text-sm text-white/70">
-              {completions.size} / {challenges.length} challenges completed
-            </p>
-          </div>
-          <div className="w-full max-w-xs sm:w-56">
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/20">
-              <div
-                className="h-full rounded-full bg-cap-light-blue transition-all"
-                style={{ width: `${Math.round(progress * 100)}%` }}
-              />
+      <div className="sticky top-[57px] z-30 mb-8 rounded-2xl bg-cap-dark-blue text-white shadow-lg">
+        <div className="p-6">
+          <p className="text-sm text-white/70">Welcome, {participant.name}</p>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-3xl font-bold">{totalScore} pts</p>
+              <p className="text-sm text-white/70">
+                {completions.size} / {challenges.length} challenges completed
+              </p>
+            </div>
+            <div className="w-full max-w-xs sm:w-56">
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/20">
+                <div
+                  className="h-full rounded-full bg-cap-light-blue transition-all"
+                  style={{ width: `${Math.round(progress * 100)}%` }}
+                />
+              </div>
             </div>
           </div>
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <BadgeShelf earned={earnedBadges} />
+          </div>
         </div>
-        <div className="mt-4 border-t border-white/10 pt-4">
-          <BadgeShelf earned={earnedBadges} />
+
+        <div className="scroll-thin flex gap-2 overflow-x-auto border-t border-white/10 px-4 py-3">
+          {availableCategories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+                category === activeCategory
+                  ? "bg-white text-cap-dark-blue"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              {CATEGORY_LABELS[category]}
+              <span className="ml-1.5 text-xs opacity-70">
+                {grouped.get(category)!.filter((c) => completions.has(c.id)).length}/
+                {grouped.get(category)!.length}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -469,18 +500,15 @@ export default function ChallengesPage() {
         </div>
       )}
 
-      <div className="space-y-10">
-        {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => (
-          <section key={category}>
-            <h2 className="mb-4 text-xl font-bold text-cap-dark-blue">
-              {CATEGORY_LABELS[category]}
-            </h2>
-            <div className="scroll-thin -mx-4 flex snap-x snap-proximity gap-4 overflow-x-auto px-4 pb-6 pt-1">
-              {grouped.get(category)!.map((challenge) => renderCard(challenge))}
-            </div>
-          </section>
-        ))}
-      </div>
+      {activeCategory && (
+        <Carousel3D
+          key={activeCategory}
+          items={activeChallenges}
+          keyExtractor={(challenge) => challenge.id}
+          ariaLabel={`${CATEGORY_LABELS[activeCategory]} challenges`}
+          renderItem={(challenge, { isActive }) => renderCard(challenge, isActive)}
+        />
+      )}
     </div>
   );
 }
