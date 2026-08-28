@@ -15,8 +15,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${ubuntu.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-cap-white text-cap-dark-blue">{children}</body>
+    <html lang="en" className={`${ubuntu.variable} h-full overflow-x-hidden antialiased`}>
+      <body className="min-h-full flex flex-col overflow-x-hidden bg-cap-white text-cap-dark-blue">
+        {children}
+      </body>
     </html>
   );
 }
