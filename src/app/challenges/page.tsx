@@ -8,7 +8,6 @@ import { compressImage } from "@/lib/photo";
 import { getStoredParticipant, StoredParticipant } from "@/lib/participant";
 import { CATEGORY_LABELS, Category, Challenge, Completion } from "@/lib/types";
 import { Badge, computeEarnedBadges } from "@/lib/badges";
-import { CATEGORY_COLORS } from "@/lib/categoryColors";
 import { Disclaimer } from "@/components/Disclaimer";
 import { BadgeShelf } from "@/components/BadgeShelf";
 import { BadgeToast } from "@/components/BadgeToast";
@@ -311,7 +310,7 @@ export default function ChallengesPage() {
 
   const progress = challenges.length ? completions.size / challenges.length : 0;
 
-  function renderCard(challenge: Challenge, color: string) {
+  function renderCard(challenge: Challenge) {
     const completion = completions.get(challenge.id);
     const isBusy = busyId === challenge.id;
     const stagedFile = stagedFiles[challenge.id];
@@ -319,17 +318,13 @@ export default function ChallengesPage() {
     return (
       <div
         key={challenge.id}
-        className={`flex w-72 shrink-0 snap-start flex-col gap-2 rounded-xl border-2 border-l-4 bg-white p-4 text-left shadow-sm transition ${
-          completion ? "opacity-90" : ""
+        className={`flex w-72 shrink-0 snap-center flex-col gap-2 rounded-2xl border bg-white p-4 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl ${
+          completion ? "border-cap-dark-blue/40 opacity-90" : "border-cap-dark-blue/10"
         }`}
-        style={{ borderColor: completion ? color : `${color}33`, borderLeftColor: color }}
       >
         <div className="flex w-full items-start justify-between gap-2">
           <span className="font-semibold text-cap-dark-blue">{challenge.title}</span>
-          <span
-            className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold"
-            style={{ backgroundColor: `${color}1A`, color }}
-          >
+          <span className="shrink-0 rounded-full bg-cap-dark-blue/10 px-2.5 py-0.5 text-xs font-bold text-cap-dark-blue">
             {challenge.points} pts
           </span>
         </div>
@@ -351,7 +346,7 @@ export default function ChallengesPage() {
                 </a>
               )}
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold" style={{ color }}>
+                <span className="text-xs font-semibold text-cap-dark-blue">
                   ✓ Completed
                 </span>
                 <button
@@ -373,8 +368,7 @@ export default function ChallengesPage() {
           <button
             onClick={() => startFilePick(challenge)}
             disabled={isBusy}
-            className="mt-1 rounded-lg border border-dashed px-3 py-2 text-sm font-semibold hover:opacity-80 disabled:opacity-50"
-            style={{ borderColor: `${color}66`, color }}
+            className="mt-1 rounded-lg border border-dashed border-cap-dark-blue/40 px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-80 disabled:opacity-50"
           >
             {isBusy ? "Uploading…" : "📷 Add photo to complete"}
           </button>
@@ -393,8 +387,7 @@ export default function ChallengesPage() {
             <button
               onClick={() => completeTextChallenge(challenge)}
               disabled={isBusy}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: color }}
+              className="rounded-lg bg-cap-dark-blue px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
               {isBusy ? "Saving…" : "✅ Submit to complete"}
             </button>
@@ -414,16 +407,14 @@ export default function ChallengesPage() {
             <button
               onClick={() => startFilePick(challenge)}
               disabled={isBusy}
-              className="rounded-lg border border-dashed px-3 py-2 text-sm font-semibold hover:opacity-80 disabled:opacity-50"
-              style={{ borderColor: `${color}66`, color }}
+              className="rounded-lg border border-dashed border-cap-dark-blue/40 px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-80 disabled:opacity-50"
             >
               {stagedFile ? `📷 ${stagedFile.name}` : "📷 Attach a photo"}
             </button>
             <button
               onClick={() => completeBothChallenge(challenge)}
               disabled={isBusy || !stagedFile || !(textDrafts[challenge.id] ?? "").trim()}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: color }}
+              className="rounded-lg bg-cap-dark-blue px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
               {isBusy ? "Saving…" : "✅ Submit to complete"}
             </button>
@@ -479,25 +470,16 @@ export default function ChallengesPage() {
       )}
 
       <div className="space-y-10">
-        {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => {
-          const color = CATEGORY_COLORS[category];
-          return (
-            <section key={category}>
-              <div className="mb-4 flex items-center gap-2">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                <h2 className="text-xl font-bold text-cap-dark-blue">
-                  {CATEGORY_LABELS[category]}
-                </h2>
-              </div>
-              <div className="scroll-thin -mx-4 flex snap-x snap-proximity gap-4 overflow-x-auto px-4 pb-3">
-                {grouped.get(category)!.map((challenge) => renderCard(challenge, color))}
-              </div>
-            </section>
-          );
-        })}
+        {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => (
+          <section key={category}>
+            <h2 className="mb-4 text-xl font-bold text-cap-dark-blue">
+              {CATEGORY_LABELS[category]}
+            </h2>
+            <div className="scroll-thin -mx-4 flex snap-x snap-proximity gap-4 overflow-x-auto px-4 pb-6 pt-1">
+              {grouped.get(category)!.map((challenge) => renderCard(challenge))}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );
