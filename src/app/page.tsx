@@ -1,33 +1,40 @@
-import { RegisterForm } from "@/components/RegisterForm";
-import { Disclaimer } from "@/components/Disclaimer";
+import Link from "next/link";
 
-export default function Home() {
+export default function SplashPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4">
-      <section className="flex flex-col items-center gap-6 py-16 text-center sm:py-24">
-        <span className="rounded-full bg-cap-light-blue/15 px-4 py-1 text-sm font-semibold text-cap-blue">
-          AI · Networking · Learning · Collaboration
+    <div
+      className="flex min-h-screen flex-col items-center justify-between overflow-hidden bg-cap-dark-blue px-4 py-10 text-center text-white"
+      style={{
+        backgroundImage:
+          "linear-gradient(180deg, rgba(18,26,56,0.55) 0%, rgba(18,26,56,0.85) 65%, #121a38 100%), radial-gradient(circle at 50% 30%, #1a2a5c 0%, #121a38 70%), url('/hero.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <p className="pt-6 text-sm font-semibold tracking-wide text-white/70">
+        Invent<span className="text-cap-light-blue">X</span> Challenge
+      </p>
+
+      <div className="flex flex-col items-center gap-6">
+        <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-cap-light-blue">
+          The day starts now
         </span>
-        <h1 className="text-4xl font-bold tracking-tight text-cap-dark-blue sm:text-6xl">
-          Welcome to the{" "}
-          <span className="text-cap-blue">
-            Invent<span className="text-cap-light-blue">X</span>
-          </span>{" "}
-          Challenge
+        <h1 className="max-w-2xl text-4xl font-bold leading-tight sm:text-6xl">
+          Are you ready to explore, connect, and earn your spot on the leaderboard?
         </h1>
-        <p className="max-w-2xl text-lg text-cap-dark-blue/70">
-          A bingo card, scavenger hunt, and networking challenge all in one. Complete
-          challenges throughout the day, earn points, and climb the leaderboard.
+        <p className="max-w-md text-white/70">
+          Challenges, teamwork, and a few surprises are waiting for you.
         </p>
 
-        <div className="mt-6 flex w-full justify-center">
-          <RegisterForm />
-        </div>
+        <Link
+          href="/join"
+          className="mt-4 rounded-full bg-cap-light-blue px-8 py-3 text-lg font-bold text-cap-dark-blue shadow-lg transition hover:scale-105 hover:bg-white"
+        >
+          Let&apos;s go!
+        </Link>
+      </div>
 
-        <div className="mt-4 w-full max-w-sm">
-          <Disclaimer />
-        </div>
-      </section>
+      <p className="pb-4 text-xs text-white/40">Capgemini Invent</p>
     </div>
   );
 }

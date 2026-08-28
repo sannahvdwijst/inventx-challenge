@@ -68,7 +68,7 @@ export default function ChallengesPage() {
   useEffect(() => {
     const stored = getStoredParticipant();
     if (!stored) {
-      router.replace("/");
+      router.replace("/join");
       return;
     }
     // Reading localStorage is only possible client-side, so this one-time
