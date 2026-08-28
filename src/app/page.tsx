@@ -17,20 +17,24 @@ export default function SplashPage() {
 
       <div className="flex flex-col items-center gap-6">
         <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-cap-light-blue">
-          The day starts now
+          Today&apos;s the day
         </span>
         <h1 className="max-w-2xl text-3xl font-bold leading-tight sm:text-4xl md:text-6xl">
-          Are you ready to explore, connect, and earn your spot on the leaderboard?
+          Welcome to the{" "}
+          <span>
+            Invent<span className="text-cap-light-blue">X</span>
+          </span>{" "}
+          Challenge
         </h1>
         <p className="max-w-md text-sm text-white/70 sm:text-base">
-          Challenges, teamwork, and a few surprises are waiting for you.
+          Complete challenges, meet new people, and climb the leaderboard.
         </p>
 
         <Link
           href="/join"
           className="mt-4 rounded-full bg-cap-light-blue px-8 py-3 text-lg font-bold text-cap-dark-blue shadow-lg transition hover:scale-105 hover:bg-white active:scale-95"
         >
-          Let&apos;s go!
+          Let&apos;s go
         </Link>
       </div>
 
