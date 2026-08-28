@@ -4,11 +4,12 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-black/5 bg-cap-white/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link href="/challenges" className="text-lg font-bold text-cap-blue">
-            Invent<span className="text-cap-light-blue">X</span> Challenge
+        <nav className="mx-auto flex max-w-5xl items-center justify-between px-3 py-3 sm:px-4">
+          <Link href="/challenges" className="shrink-0 text-base font-bold text-cap-blue sm:text-lg">
+            Invent<span className="text-cap-light-blue">X</span>
+            <span className="hidden sm:inline"> Challenge</span>
           </Link>
-          <div className="flex gap-4 text-sm font-medium">
+          <div className="flex gap-3 text-sm font-medium sm:gap-4">
             <Link href="/challenges" className="hover:text-cap-blue">
               Challenges
             </Link>

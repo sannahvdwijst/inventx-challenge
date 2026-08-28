@@ -445,18 +445,18 @@ export default function ChallengesPage() {
 
       <BadgeToast badges={newBadges} />
 
-      <div className="sticky top-[57px] z-30 mb-8 rounded-2xl bg-cap-dark-blue text-white shadow-lg">
-        <div className="p-6">
-          <p className="text-sm text-white/70">Welcome, {participant.name}</p>
-          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+      <div className="sticky top-[49px] z-30 mb-5 rounded-2xl bg-cap-dark-blue text-white shadow-lg sm:top-[53px] sm:mb-8">
+        <div className="p-4 sm:p-6">
+          <p className="text-xs text-white/70 sm:text-sm">Welcome, {participant.name}</p>
+          <div className="mt-1.5 flex flex-wrap items-end justify-between gap-3 sm:mt-2 sm:gap-4">
             <div>
-              <p className="text-3xl font-bold">{totalScore} pts</p>
-              <p className="text-sm text-white/70">
+              <p className="text-2xl font-bold sm:text-3xl">{totalScore} pts</p>
+              <p className="text-xs text-white/70 sm:text-sm">
                 {completions.size} / {challenges.length} challenges completed
               </p>
             </div>
             <div className="w-full max-w-xs sm:w-56">
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/20">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/20 sm:h-2.5">
                 <div
                   className="h-full rounded-full bg-cap-light-blue transition-all"
                   style={{ width: `${Math.round(progress * 100)}%` }}
@@ -464,24 +464,24 @@ export default function ChallengesPage() {
               </div>
             </div>
           </div>
-          <div className="mt-4 border-t border-white/10 pt-4">
+          <div className="mt-3 border-t border-white/10 pt-3 sm:mt-4 sm:pt-4">
             <BadgeShelf earned={earnedBadges} />
           </div>
         </div>
 
-        <div className="scroll-thin flex gap-2 overflow-x-auto border-t border-white/10 px-4 py-3">
+        <div className="scroll-thin flex gap-2 overflow-x-auto border-t border-white/10 px-3 py-2 sm:px-4 sm:py-3">
           {availableCategories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-3.5 sm:text-sm ${
                 category === activeCategory
                   ? "bg-white text-cap-dark-blue"
                   : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               {CATEGORY_LABELS[category]}
-              <span className="ml-1.5 text-xs opacity-70">
+              <span className="ml-1.5 text-[10px] opacity-70 sm:text-xs">
                 {grouped.get(category)!.filter((c) => completions.has(c.id)).length}/
                 {grouped.get(category)!.length}
               </span>
@@ -490,7 +490,7 @@ export default function ChallengesPage() {
         </div>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-5 sm:mb-8">
         <Disclaimer />
       </div>
 

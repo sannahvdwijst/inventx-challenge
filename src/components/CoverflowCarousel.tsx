@@ -227,7 +227,7 @@ export function CoverflowCarousel<T>({
         onPointerCancel={onPointerUp}
         onWheel={onWheel}
         onKeyDown={onKeyDown}
-        className="relative mx-auto cursor-grab touch-pan-y overflow-visible outline-none active:cursor-grabbing"
+        className="relative isolate mx-auto cursor-grab touch-pan-y overflow-visible outline-none active:cursor-grabbing"
         style={{
           height: size.cardHeight + 80,
           perspective: "1800px",

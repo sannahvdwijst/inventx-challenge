@@ -19,16 +19,16 @@ export default function SplashPage() {
         <span className="rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-cap-light-blue">
           The day starts now
         </span>
-        <h1 className="max-w-2xl text-4xl font-bold leading-tight sm:text-6xl">
+        <h1 className="max-w-2xl text-3xl font-bold leading-tight sm:text-4xl md:text-6xl">
           Are you ready to explore, connect, and earn your spot on the leaderboard?
         </h1>
-        <p className="max-w-md text-white/70">
+        <p className="max-w-md text-sm text-white/70 sm:text-base">
           Challenges, teamwork, and a few surprises are waiting for you.
         </p>
 
         <Link
           href="/join"
-          className="mt-4 rounded-full bg-cap-light-blue px-8 py-3 text-lg font-bold text-cap-dark-blue shadow-lg transition hover:scale-105 hover:bg-white"
+          className="mt-4 rounded-full bg-cap-light-blue px-8 py-3 text-lg font-bold text-cap-dark-blue shadow-lg transition hover:scale-105 hover:bg-white active:scale-95"
         >
           Let&apos;s go!
         </Link>
