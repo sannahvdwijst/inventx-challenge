@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
-export interface Carousel3DProps<T> {
+export interface CoverflowCarouselProps<T> {
   items: T[];
   keyExtractor: (item: T) => string;
   renderItem: (item: T, state: { isActive: boolean; index: number }) => React.ReactNode;
@@ -20,63 +14,70 @@ export interface Carousel3DProps<T> {
 interface Size {
   cardWidth: number;
   cardHeight: number;
-  radius: number;
+  spacing: number;
 }
 
-function computeSize(viewportWidth: number, itemCount: number): Size {
+function computeSize(viewportWidth: number): Size {
   const isMobile = viewportWidth < 640;
-  const cardWidth = isMobile ? Math.min(240, viewportWidth - 96) : 288;
-  const cardHeight = isMobile ? 300 : 340;
-  // Enough radius that neighbouring cards don't intersect the active one.
-  const raw = cardWidth / 2 / Math.tan(Math.PI / Math.max(itemCount, 3));
-  const radius = Math.max(raw * 1.35, cardWidth * 0.9);
-  return { cardWidth, cardHeight, radius };
+  const cardWidth = isMobile ? Math.min(220, viewportWidth - 120) : 300;
+  const cardHeight = isMobile ? 280 : 360;
+  const spacing = cardWidth * 0.62;
+  return { cardWidth, cardHeight, spacing };
+}
+
+// Shortest signed distance between an item's index and the (possibly
+// fractional) active position, wrapping around for infinite looping.
+function wrappedDelta(index: number, position: number, count: number) {
+  let delta = index - position;
+  delta = ((delta % count) + count) % count;
+  if (delta > count / 2) delta -= count;
+  return delta;
 }
 
 const SNAP_EASE = "power3.out";
-const SNAP_DURATION = 0.7;
-const DRAG_SENSITIVITY = 0.28;
-const MOMENTUM_MULTIPLIER = 140;
+const SNAP_DURATION = 0.65;
+const DRAG_SENSITIVITY = 1;
+const MOMENTUM_MULTIPLIER = 6;
 const WHEEL_LOCK_MS = 320;
+const MAX_ROTATION = 32;
+const VISIBLE_RANGE = 3;
 
-export function Carousel3D<T>({
+export function CoverflowCarousel<T>({
   items,
   keyExtractor,
   renderItem,
   onActiveIndexChange,
   ariaLabel,
-}: Carousel3DProps<T>) {
+}: CoverflowCarouselProps<T>) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const ringRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const angleProxy = useRef({ angle: 0 });
+  const positionProxy = useRef({ pos: 0 });
   const currentIndexRef = useRef(0);
   const draggingRef = useRef(false);
   const dragStartX = useRef(0);
-  const dragStartAngle = useRef(0);
+  const dragStartPos = useRef(0);
   const lastMoveRef = useRef<{ x: number; t: number } | null>(null);
   const velocityRef = useRef(0);
   const wheelLockRef = useRef(0);
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [size, setSize] = useState<Size>(() => computeSize(1024, items.length));
+  const [size, setSize] = useState<Size>(() => computeSize(1024));
 
   const count = items.length;
-  const anglePerItem = useMemo(() => 360 / Math.max(count, 1), [count]);
 
   useEffect(() => {
     function handleResize() {
       const w = viewportRef.current?.clientWidth ?? window.innerWidth;
-      setSize(computeSize(w, count));
+      setSize(computeSize(w));
     }
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [count]);
+  }, []);
 
   const applyTransforms = useCallback(
-    (angleDeg: number) => {
+    (position: number) => {
       let closestIndex = 0;
       let closestDelta = Infinity;
 
@@ -84,36 +85,40 @@ export function Carousel3D<T>({
         const el = cardRefs.current.get(keyExtractor(item));
         if (!el) return;
 
-        const itemAngle = i * anglePerItem;
-        const effective = itemAngle + angleDeg;
-        const normalized = ((effective % 360) + 540) % 360 - 180;
-        const rad = (normalized * Math.PI) / 180;
-        const factor = Math.cos(rad);
-        const depth = (factor + 1) / 2;
+        const delta = wrappedDelta(i, position, count);
+        const absDelta = Math.abs(delta);
 
-        if (Math.abs(normalized) < closestDelta) {
-          closestDelta = Math.abs(normalized);
+        if (absDelta < closestDelta) {
+          closestDelta = absDelta;
           closestIndex = i;
         }
 
-        const scale = 0.58 + 0.42 * Math.pow(depth, 1.4);
-        const opacity = 0.2 + 0.8 * depth;
-        const blur = (1 - depth) * 5;
+        if (absDelta > VISIBLE_RANGE) {
+          el.style.opacity = "0";
+          el.style.pointerEvents = "none";
+          el.style.zIndex = "0";
+          return;
+        }
 
-        el.style.transform = `translate(-50%, -50%) rotateY(${itemAngle}deg) translateZ(${size.radius}px) scale(${scale})`;
+        const x = delta * size.spacing;
+        const z = -absDelta * 90;
+        const rotation = Math.max(-MAX_ROTATION, Math.min(MAX_ROTATION, delta * -22));
+        const scale = Math.max(0.5, 1 - absDelta * 0.22);
+        const opacity = Math.max(0, 1 - absDelta * 0.4);
+
+        el.style.transform = `translate(-50%, -50%) translateX(${x}px) translateZ(${z}px) rotateY(${rotation}deg) scale(${scale})`;
         el.style.opacity = String(opacity);
-        el.style.filter = blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : "none";
-        el.style.zIndex = String(Math.round(factor * 1000));
-        el.style.pointerEvents = depth > 0.75 ? "auto" : "none";
+        el.style.zIndex = String(Math.round(1000 - absDelta * 10));
+        el.style.pointerEvents = absDelta < 0.5 ? "auto" : "none";
       });
 
       return closestIndex;
     },
-    [items, keyExtractor, anglePerItem, size.radius]
+    [items, keyExtractor, count, size.spacing]
   );
 
   useEffect(() => {
-    applyTransforms(angleProxy.current.angle);
+    applyTransforms(positionProxy.current.pos);
   }, [applyTransforms]);
 
   const goToIndex = useCallback(
@@ -123,23 +128,22 @@ export function Carousel3D<T>({
       setActiveIndex(mod);
       onActiveIndexChange?.(mod);
 
-      const target = -index * anglePerItem;
-      gsap.killTweensOf(angleProxy.current);
+      gsap.killTweensOf(positionProxy.current);
 
       if (opts?.immediate) {
-        angleProxy.current.angle = target;
-        applyTransforms(target);
+        positionProxy.current.pos = index;
+        applyTransforms(index);
         return;
       }
 
-      gsap.to(angleProxy.current, {
-        angle: target,
+      gsap.to(positionProxy.current, {
+        pos: index,
         duration: SNAP_DURATION,
         ease: SNAP_EASE,
-        onUpdate: () => applyTransforms(angleProxy.current.angle),
+        onUpdate: () => applyTransforms(positionProxy.current.pos),
       });
     },
-    [count, anglePerItem, applyTransforms, onActiveIndexChange]
+    [count, applyTransforms, onActiveIndexChange]
   );
 
   const next = useCallback(() => goToIndex(currentIndexRef.current + 1), [goToIndex]);
@@ -149,26 +153,26 @@ export function Carousel3D<T>({
     if (count < 2) return;
     draggingRef.current = true;
     dragStartX.current = e.clientX;
-    dragStartAngle.current = angleProxy.current.angle;
+    dragStartPos.current = positionProxy.current.pos;
     lastMoveRef.current = { x: e.clientX, t: performance.now() };
     velocityRef.current = 0;
-    gsap.killTweensOf(angleProxy.current);
+    gsap.killTweensOf(positionProxy.current);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   function onPointerMove(e: React.PointerEvent) {
     if (!draggingRef.current) return;
     const deltaX = e.clientX - dragStartX.current;
-    const newAngle = dragStartAngle.current + deltaX * DRAG_SENSITIVITY;
-    angleProxy.current.angle = newAngle;
-    applyTransforms(newAngle);
+    const newPos = dragStartPos.current - (deltaX / size.spacing) * DRAG_SENSITIVITY;
+    positionProxy.current.pos = newPos;
+    applyTransforms(newPos);
 
     const now = performance.now();
     const last = lastMoveRef.current;
     if (last) {
       const dt = now - last.t;
       if (dt > 0) {
-        velocityRef.current = ((e.clientX - last.x) * DRAG_SENSITIVITY) / dt;
+        velocityRef.current = -(e.clientX - last.x) / size.spacing / dt;
       }
     }
     lastMoveRef.current = { x: e.clientX, t: now };
@@ -177,10 +181,9 @@ export function Carousel3D<T>({
   function onPointerUp() {
     if (!draggingRef.current) return;
     draggingRef.current = false;
-    const momentum = velocityRef.current * MOMENTUM_MULTIPLIER;
-    const projected = angleProxy.current.angle + momentum;
-    const targetIndex = Math.round(-projected / anglePerItem);
-    goToIndex(targetIndex);
+    const momentum = velocityRef.current * MOMENTUM_MULTIPLIER * 16;
+    const projected = positionProxy.current.pos + momentum;
+    goToIndex(Math.round(projected));
   }
 
   function onWheel(e: React.WheelEvent) {
@@ -224,15 +227,14 @@ export function Carousel3D<T>({
         onPointerCancel={onPointerUp}
         onWheel={onWheel}
         onKeyDown={onKeyDown}
-        className="relative mx-auto cursor-grab touch-pan-y outline-none active:cursor-grabbing"
+        className="relative mx-auto cursor-grab touch-pan-y overflow-visible outline-none active:cursor-grabbing"
         style={{
-          height: size.cardHeight + 140,
-          perspective: "1600px",
+          height: size.cardHeight + 80,
+          perspective: "1800px",
           perspectiveOrigin: "50% 50%",
         }}
       >
         <div
-          ref={ringRef}
           className="absolute left-1/2 top-1/2"
           style={{ transformStyle: "preserve-3d" }}
         >
@@ -263,7 +265,7 @@ export function Carousel3D<T>({
               type="button"
               aria-label="Previous"
               onClick={prev}
-              className="absolute left-0 top-1/2 z-40 -translate-y-1/2 rounded-full bg-white/90 p-2 text-cap-dark-blue shadow-md transition hover:scale-105 hover:bg-white"
+              className="absolute left-2 top-1/2 z-40 -translate-y-1/2 rounded-full bg-white/90 p-2 text-cap-dark-blue shadow-md transition hover:scale-105 hover:bg-white"
             >
               ‹
             </button>
@@ -271,7 +273,7 @@ export function Carousel3D<T>({
               type="button"
               aria-label="Next"
               onClick={next}
-              className="absolute right-0 top-1/2 z-40 -translate-y-1/2 rounded-full bg-white/90 p-2 text-cap-dark-blue shadow-md transition hover:scale-105 hover:bg-white"
+              className="absolute right-2 top-1/2 z-40 -translate-y-1/2 rounded-full bg-white/90 p-2 text-cap-dark-blue shadow-md transition hover:scale-105 hover:bg-white"
             >
               ›
             </button>
@@ -280,7 +282,7 @@ export function Carousel3D<T>({
       </div>
 
       {count > 1 && (
-        <div className="mt-2 flex justify-center gap-1.5">
+        <div className="mt-3 flex justify-center gap-1.5">
           {items.map((item, i) => (
             <button
               key={keyExtractor(item)}

@@ -11,7 +11,7 @@ import { Badge, computeEarnedBadges } from "@/lib/badges";
 import { Disclaimer } from "@/components/Disclaimer";
 import { BadgeShelf } from "@/components/BadgeShelf";
 import { BadgeToast } from "@/components/BadgeToast";
-import { Carousel3D } from "@/components/Carousel3D";
+import { CoverflowCarousel } from "@/components/CoverflowCarousel";
 
 function fireConfetti(particleCount: number) {
   confetti({
@@ -501,7 +501,7 @@ export default function ChallengesPage() {
       )}
 
       {activeCategory && (
-        <Carousel3D
+        <CoverflowCarousel
           key={activeCategory}
           items={activeChallenges}
           keyExtractor={(challenge) => challenge.id}
