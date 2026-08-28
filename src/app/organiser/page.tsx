@@ -53,8 +53,7 @@ export default async function OrganiserDashboard() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-cap-dark-blue">Organiser Dashboard</h1>
-          <div className="gradient-bar mt-2 h-1 w-16 rounded-full" />
-          <p className="mt-3 text-cap-dark-blue/60">InventX Challenge — live event overview.</p>
+          <p className="mt-1 text-cap-dark-blue/60">InventX Challenge — live event overview.</p>
         </div>
         <form action={organiserLogout}>
           <button
@@ -94,7 +93,7 @@ export default async function OrganiserDashboard() {
                   key={p.id}
                   className={`rounded-2xl border p-5 text-center ${
                     i === 0
-                      ? "bg-stars border-cap-light-blue text-white sm:order-2 sm:scale-105"
+                      ? "border-cap-blue bg-cap-blue text-white sm:order-2 sm:scale-105"
                       : "border-cap-dark-blue/15 bg-white text-cap-dark-blue"
                   }`}
                 >

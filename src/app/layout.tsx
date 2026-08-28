@@ -18,7 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${ubuntu.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-cap-white text-cap-dark-blue">
-        <header className="sticky top-0 z-40 bg-cap-white/90 backdrop-blur">
+        <header className="sticky top-0 z-40 border-b border-black/5 bg-cap-white/90 backdrop-blur">
           <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="text-lg font-bold text-cap-blue">
               Invent<span className="text-cap-light-blue">X</span> Challenge
@@ -32,12 +32,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </Link>
             </div>
           </nav>
-          <div className="gradient-bar h-0.5 w-full" />
         </header>
 
         <main className="flex-1">{children}</main>
 
-        <footer className="bg-stars text-white">
+        <footer className="border-t border-black/5 bg-cap-dark-blue text-white">
           <div className="mx-auto max-w-5xl px-4 py-6 text-sm text-white/80">
             <p className="font-semibold text-white">Play fair.</p>
             <p className="mt-1">
