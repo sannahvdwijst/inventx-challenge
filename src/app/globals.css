@@ -44,3 +44,21 @@ body {
 .animate-badge-pop {
   animation: badge-pop 3.2s ease forwards;
 }
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(18, 26, 56, 0.2) transparent;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(18, 26, 56, 0.2);
+  border-radius: 9999px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}

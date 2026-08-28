@@ -8,6 +8,7 @@ import { compressImage } from "@/lib/photo";
 import { getStoredParticipant, StoredParticipant } from "@/lib/participant";
 import { CATEGORY_LABELS, Category, Challenge, Completion } from "@/lib/types";
 import { Badge, computeEarnedBadges } from "@/lib/badges";
+import { CATEGORY_COLORS } from "@/lib/categoryColors";
 import { Disclaimer } from "@/components/Disclaimer";
 import { BadgeShelf } from "@/components/BadgeShelf";
 import { BadgeToast } from "@/components/BadgeToast";
@@ -310,6 +311,128 @@ export default function ChallengesPage() {
 
   const progress = challenges.length ? completions.size / challenges.length : 0;
 
+  function renderCard(challenge: Challenge, color: string) {
+    const completion = completions.get(challenge.id);
+    const isBusy = busyId === challenge.id;
+    const stagedFile = stagedFiles[challenge.id];
+
+    return (
+      <div
+        key={challenge.id}
+        className={`flex w-72 shrink-0 snap-start flex-col gap-2 rounded-xl border-2 border-l-4 bg-white p-4 text-left shadow-sm transition ${
+          completion ? "opacity-90" : ""
+        }`}
+        style={{ borderColor: completion ? color : `${color}33`, borderLeftColor: color }}
+      >
+        <div className="flex w-full items-start justify-between gap-2">
+          <span className="font-semibold text-cap-dark-blue">{challenge.title}</span>
+          <span
+            className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold"
+            style={{ backgroundColor: `${color}1A`, color }}
+          >
+            {challenge.points} pts
+          </span>
+        </div>
+        {challenge.description && (
+          <p className="text-sm text-cap-dark-blue/60">{challenge.description}</p>
+        )}
+
+        {completion ? (
+          <div className="mt-1 flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              {completion.photo_url && (
+                <a href={completion.photo_url} target="_blank" rel="noreferrer" className="shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={completion.photo_url}
+                    alt={`Evidence for ${challenge.title}`}
+                    className="h-16 w-16 rounded-lg object-cover"
+                  />
+                </a>
+              )}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold" style={{ color }}>
+                  ✓ Completed
+                </span>
+                <button
+                  onClick={() => removeCompletion(challenge)}
+                  disabled={isBusy}
+                  className="text-left text-xs text-cap-dark-blue/50 underline hover:text-red-600 disabled:opacity-50"
+                >
+                  {isBusy ? "Removing…" : "Remove"}
+                </button>
+              </div>
+            </div>
+            {completion.proof_text && (
+              <p className="whitespace-pre-wrap rounded-lg bg-cap-dark-blue/5 p-2 text-xs text-cap-dark-blue/70">
+                {completion.proof_text}
+              </p>
+            )}
+          </div>
+        ) : challenge.proof_type === "photo" ? (
+          <button
+            onClick={() => startFilePick(challenge)}
+            disabled={isBusy}
+            className="mt-1 rounded-lg border border-dashed px-3 py-2 text-sm font-semibold hover:opacity-80 disabled:opacity-50"
+            style={{ borderColor: `${color}66`, color }}
+          >
+            {isBusy ? "Uploading…" : "📷 Add photo to complete"}
+          </button>
+        ) : challenge.proof_type === "text" ? (
+          <div className="mt-1 flex flex-col gap-2">
+            <textarea
+              value={textDrafts[challenge.id] ?? ""}
+              onChange={(e) =>
+                setTextDrafts((prev) => ({ ...prev, [challenge.id]: e.target.value }))
+              }
+              disabled={isBusy}
+              rows={2}
+              placeholder="Type your answer here..."
+              className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+            />
+            <button
+              onClick={() => completeTextChallenge(challenge)}
+              disabled={isBusy}
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: color }}
+            >
+              {isBusy ? "Saving…" : "✅ Submit to complete"}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-1 flex flex-col gap-2">
+            <textarea
+              value={textDrafts[challenge.id] ?? ""}
+              onChange={(e) =>
+                setTextDrafts((prev) => ({ ...prev, [challenge.id]: e.target.value }))
+              }
+              disabled={isBusy}
+              rows={2}
+              placeholder="Type your answer here..."
+              className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+            />
+            <button
+              onClick={() => startFilePick(challenge)}
+              disabled={isBusy}
+              className="rounded-lg border border-dashed px-3 py-2 text-sm font-semibold hover:opacity-80 disabled:opacity-50"
+              style={{ borderColor: `${color}66`, color }}
+            >
+              {stagedFile ? `📷 ${stagedFile.name}` : "📷 Attach a photo"}
+            </button>
+            <button
+              onClick={() => completeBothChallenge(challenge)}
+              disabled={isBusy || !stagedFile || !(textDrafts[challenge.id] ?? "").trim()}
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: color }}
+            >
+              {isBusy ? "Saving…" : "✅ Submit to complete"}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <input
@@ -322,7 +445,7 @@ export default function ChallengesPage() {
 
       <BadgeToast badges={newBadges} />
 
-      <div className="mb-8 rounded-2xl bg-cap-dark-blue p-6 text-white">
+      <div className="sticky top-[57px] z-30 mb-8 rounded-2xl bg-cap-dark-blue p-6 text-white shadow-lg">
         <p className="text-sm text-white/70">Welcome, {participant.name}</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -356,128 +479,25 @@ export default function ChallengesPage() {
       )}
 
       <div className="space-y-10">
-        {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => (
-          <section key={category}>
-            <h2 className="mb-4 text-xl font-bold text-cap-dark-blue">
-              {CATEGORY_LABELS[category]}
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {grouped.get(category)!.map((challenge) => {
-                const completion = completions.get(challenge.id);
-                const isBusy = busyId === challenge.id;
-                const stagedFile = stagedFiles[challenge.id];
-
-                return (
-                  <div
-                    key={challenge.id}
-                    className={`flex flex-col gap-2 rounded-xl border p-4 text-left transition ${
-                      completion
-                        ? "border-cap-blue bg-cap-blue/10"
-                        : "border-cap-dark-blue/15 bg-white"
-                    }`}
-                  >
-                    <div className="flex w-full items-start justify-between gap-2">
-                      <span className="font-semibold text-cap-dark-blue">{challenge.title}</span>
-                      <span className="shrink-0 rounded-full bg-cap-light-blue/15 px-2.5 py-0.5 text-xs font-bold text-cap-blue">
-                        {challenge.points} pts
-                      </span>
-                    </div>
-                    {challenge.description && (
-                      <p className="text-sm text-cap-dark-blue/60">{challenge.description}</p>
-                    )}
-
-                    {completion ? (
-                      <div className="mt-1 flex flex-col gap-2">
-                        <div className="flex items-center gap-3">
-                          {completion.photo_url && (
-                            <a href={completion.photo_url} target="_blank" rel="noreferrer" className="shrink-0">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={completion.photo_url}
-                                alt={`Evidence for ${challenge.title}`}
-                                className="h-16 w-16 rounded-lg object-cover"
-                              />
-                            </a>
-                          )}
-                          <div className="flex flex-col gap-1">
-                            <span className="text-xs font-semibold text-cap-blue">✓ Completed</span>
-                            <button
-                              onClick={() => removeCompletion(challenge)}
-                              disabled={isBusy}
-                              className="text-left text-xs text-cap-dark-blue/50 underline hover:text-red-600 disabled:opacity-50"
-                            >
-                              {isBusy ? "Removing…" : "Remove"}
-                            </button>
-                          </div>
-                        </div>
-                        {completion.proof_text && (
-                          <p className="whitespace-pre-wrap rounded-lg bg-white/70 p-2 text-xs text-cap-dark-blue/70">
-                            {completion.proof_text}
-                          </p>
-                        )}
-                      </div>
-                    ) : challenge.proof_type === "photo" ? (
-                      <button
-                        onClick={() => startFilePick(challenge)}
-                        disabled={isBusy}
-                        className="mt-1 rounded-lg border border-dashed border-cap-blue/40 px-3 py-2 text-sm font-semibold text-cap-blue hover:bg-cap-blue/5 disabled:opacity-50"
-                      >
-                        {isBusy ? "Uploading…" : "📷 Add photo to complete"}
-                      </button>
-                    ) : challenge.proof_type === "text" ? (
-                      <div className="mt-1 flex flex-col gap-2">
-                        <textarea
-                          value={textDrafts[challenge.id] ?? ""}
-                          onChange={(e) =>
-                            setTextDrafts((prev) => ({ ...prev, [challenge.id]: e.target.value }))
-                          }
-                          disabled={isBusy}
-                          rows={2}
-                          placeholder="Type your answer here..."
-                          className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
-                        />
-                        <button
-                          onClick={() => completeTextChallenge(challenge)}
-                          disabled={isBusy}
-                          className="rounded-lg bg-cap-blue px-3 py-2 text-sm font-semibold text-white hover:bg-cap-dark-blue disabled:opacity-50"
-                        >
-                          {isBusy ? "Saving…" : "✅ Submit to complete"}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-1 flex flex-col gap-2">
-                        <textarea
-                          value={textDrafts[challenge.id] ?? ""}
-                          onChange={(e) =>
-                            setTextDrafts((prev) => ({ ...prev, [challenge.id]: e.target.value }))
-                          }
-                          disabled={isBusy}
-                          rows={2}
-                          placeholder="Type your answer here..."
-                          className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
-                        />
-                        <button
-                          onClick={() => startFilePick(challenge)}
-                          disabled={isBusy}
-                          className="rounded-lg border border-dashed border-cap-blue/40 px-3 py-2 text-sm font-semibold text-cap-blue hover:bg-cap-blue/5 disabled:opacity-50"
-                        >
-                          {stagedFile ? `📷 ${stagedFile.name}` : "📷 Attach a photo"}
-                        </button>
-                        <button
-                          onClick={() => completeBothChallenge(challenge)}
-                          disabled={isBusy || !stagedFile || !(textDrafts[challenge.id] ?? "").trim()}
-                          className="rounded-lg bg-cap-blue px-3 py-2 text-sm font-semibold text-white hover:bg-cap-dark-blue disabled:opacity-50"
-                        >
-                          {isBusy ? "Saving…" : "✅ Submit to complete"}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+        {CATEGORY_ORDER.filter((cat) => grouped.has(cat)).map((category) => {
+          const color = CATEGORY_COLORS[category];
+          return (
+            <section key={category}>
+              <div className="mb-4 flex items-center gap-2">
+                <span
+                  className="h-3 w-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <h2 className="text-xl font-bold text-cap-dark-blue">
+                  {CATEGORY_LABELS[category]}
+                </h2>
+              </div>
+              <div className="scroll-thin -mx-4 flex snap-x snap-proximity gap-4 overflow-x-auto px-4 pb-3">
+                {grouped.get(category)!.map((challenge) => renderCard(challenge, color))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );
