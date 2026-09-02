@@ -465,11 +465,19 @@ export default function ChallengesPage() {
             </div>
           </div>
           <div className="mt-3 border-t border-white/10 pt-3 sm:mt-4 sm:pt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+              Badges
+            </p>
             <BadgeShelf earned={earnedBadges} />
           </div>
         </div>
 
-        <div className="scroll-thin flex gap-2 overflow-x-auto border-t border-white/10 px-3 py-2 sm:px-4 sm:py-3">
+        <div className="border-t border-white/10 px-3 pt-2 sm:px-4 sm:pt-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+            Challenge Categories
+          </p>
+        </div>
+        <div className="scroll-thin flex gap-2 overflow-x-auto px-3 pb-2 sm:px-4 sm:pb-3">
           {availableCategories.map((category) => (
             <button
               key={category}
