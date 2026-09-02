@@ -115,6 +115,20 @@ body {
   animation: astronaut-jump 0.85s ease-in-out infinite;
 }
 
+@keyframes astronaut-disco {
+  0%,
+  100% {
+    transform: translateX(-5px) rotate(-10deg);
+  }
+  50% {
+    transform: translateX(5px) rotate(10deg);
+  }
+}
+
+.animate-astronaut-disco {
+  animation: astronaut-disco 0.6s ease-in-out infinite;
+}
+
 .carousel-3d-shadow::after {
   content: "";
   position: absolute;
