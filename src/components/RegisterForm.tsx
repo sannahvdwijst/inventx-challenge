@@ -1,20 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { compressImage } from "@/lib/photo";
 import { setStoredParticipant } from "@/lib/participant";
 import { Department } from "@/lib/types";
 
 const DEPARTMENTS: Department[] = ["Domains", "Invent"];
+const AVATAR_BUCKET = "challenge-photos";
 
 export function RegisterForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [team, setTeam] = useState("");
   const [department, setDepartment] = useState<Department | "">("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  function handleAvatarSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,9 +46,31 @@ export function RegisterForm() {
     setLoading(true);
     setError(null);
 
+    let avatarUrl: string | null = null;
+    if (avatarFile) {
+      try {
+        const compressed = await compressImage(avatarFile);
+        const path = `avatars/${crypto.randomUUID()}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from(AVATAR_BUCKET)
+          .upload(path, compressed, { contentType: "image/jpeg" });
+        if (uploadError) throw uploadError;
+        avatarUrl = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path).data.publicUrl;
+      } catch {
+        setLoading(false);
+        setError("Couldn't upload your photo. Please try again.");
+        return;
+      }
+    }
+
     const { data, error: insertError } = await supabase
       .from("participants")
-      .insert({ name: trimmedName, team: team.trim() || null, department })
+      .insert({
+        name: trimmedName,
+        team: team.trim() || null,
+        department,
+        avatar_url: avatarUrl,
+      })
       .select()
       .single();
 
@@ -55,6 +92,31 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+      <div className="flex flex-col items-center gap-2">
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarSelected}
+        />
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-cap-light-blue/40 bg-white/5 text-2xl transition hover:border-cap-light-blue/70"
+        >
+          {avatarPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarPreview} alt="Your profile photo" className="h-full w-full object-cover" />
+          ) : (
+            "📷"
+          )}
+        </button>
+        <span className="text-xs text-white/50">
+          Add a profile photo <span className="text-white/30">(optional)</span>
+        </span>
+      </div>
+
       <div>
         <label htmlFor="name" className="mb-1 block text-sm font-medium text-white/80">
           Your name
