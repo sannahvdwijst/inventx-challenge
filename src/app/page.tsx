@@ -43,8 +43,10 @@ export default function SplashPage() {
         </p>
       </div>
 
-      <p className="pb-1 text-xs text-white/40">Capgemini Invent</p>
-      <p className="pb-4 text-[10px] text-white/25">Created by Sannah van der Wijst</p>
+      <div className="flex flex-col items-center gap-0.5 pb-4">
+        <p className="text-xs text-white/40">Capgemini Invent</p>
+        <p className="text-[10px] text-white/25">Created by Sannah van der Wijst</p>
+      </div>
     </div>
   );
 }
