@@ -76,7 +76,7 @@ const END_BOSS_BADGE: Badge = {
   id: "end-boss",
   emoji: "👹",
   label: "InventX End Boss",
-  description: "Complete all 50 challenges",
+  description: "Complete every challenge",
 };
 
 export function allBadges(): Badge[] {
