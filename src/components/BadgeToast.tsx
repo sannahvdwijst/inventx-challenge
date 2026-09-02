@@ -10,7 +10,6 @@ export function BadgeToast({ badges }: { badges: Badge[] }) {
           key={badge.id}
           className="animate-badge-pop pointer-events-auto flex items-center gap-3 rounded-full border border-cap-blue bg-white px-5 py-3 shadow-lg"
         >
-          <span className="text-2xl">{badge.emoji}</span>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-cap-blue">
               Badge unlocked

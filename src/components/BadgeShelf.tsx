@@ -17,7 +17,6 @@ export function BadgeShelf({ earned }: { earned: Badge[] }) {
                 : "border-white/10 bg-transparent text-white/30 grayscale"
             }`}
           >
-            <span className="text-base">{badge.emoji}</span>
             <span>{badge.label}</span>
           </div>
         );
