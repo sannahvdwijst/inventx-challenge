@@ -68,20 +68,10 @@ export function AstronautDancing({ className = "" }: { className?: string }) {
   return (
     <div className={`animate-astronaut-jump ${className}`}>
       <svg viewBox="0 0 100 110" className="h-full w-full" aria-hidden>
-        <HelmetAndBody
-          hideLegs
-          visorContent={
-            <rect x="37" y="30" width="26" height="7" rx="3.5" fill="#0b1130" />
-          }
-        />
-        {/* both arms up and out to the sides, clear of the helmet */}
-        <rect x="67" y="40" width="11" height="28" rx="5.5" fill={SUIT} transform="rotate(-60 67 40)" />
-        <circle cx="88" cy="20" r="7" fill={SUIT} />
-        <rect x="22" y="40" width="11" height="28" rx="5.5" fill={SUIT} transform="rotate(60 33 40)" />
-        <circle cx="12" cy="20" r="7" fill={SUIT} />
-        {/* legs together, mid-jump */}
-        <rect x="38" y="82" width="12" height="18" rx="6" fill={SUIT} />
-        <rect x="50" y="82" width="12" height="18" rx="6" fill={SUIT} />
+        <HelmetAndBody />
+        {/* same resting arms as the other two, just jumping instead of bobbing */}
+        <rect x="66" y="56" width="11" height="20" rx="5.5" fill={SUIT} transform="rotate(-15 76 56)" />
+        <rect x="24" y="56" width="11" height="20" rx="5.5" fill={SUIT} transform="rotate(15 24 56)" />
       </svg>
     </div>
   );
