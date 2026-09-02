@@ -74,11 +74,11 @@ export function AstronautDancing({ className = "" }: { className?: string }) {
             <rect x="37" y="30" width="26" height="7" rx="3.5" fill="#0b1130" />
           }
         />
-        {/* both arms straight up */}
-        <rect x="60" y="14" width="11" height="30" rx="5.5" fill={SUIT} />
-        <circle cx="65.5" cy="12" r="7" fill={SUIT} />
-        <rect x="29" y="14" width="11" height="30" rx="5.5" fill={SUIT} />
-        <circle cx="34.5" cy="12" r="7" fill={SUIT} />
+        {/* both arms up and out to the sides, clear of the helmet */}
+        <rect x="67" y="40" width="11" height="28" rx="5.5" fill={SUIT} transform="rotate(-60 67 40)" />
+        <circle cx="88" cy="20" r="7" fill={SUIT} />
+        <rect x="22" y="40" width="11" height="28" rx="5.5" fill={SUIT} transform="rotate(60 33 40)" />
+        <circle cx="12" cy="20" r="7" fill={SUIT} />
         {/* legs together, mid-jump */}
         <rect x="38" y="82" width="12" height="18" rx="6" fill={SUIT} />
         <rect x="50" y="82" width="12" height="18" rx="6" fill={SUIT} />
