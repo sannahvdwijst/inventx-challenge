@@ -322,24 +322,42 @@ export default function ChallengesPage() {
     const isBusy = busyId === challenge.id;
     const stagedFile = stagedFiles[challenge.id];
 
+    const glowBorder = completion ? "border-cap-light-blue/50" : "border-cap-light-blue/20";
+    const glowShadow = completion
+      ? "shadow-[0_0_35px_-8px_rgba(29,184,242,0.45)]"
+      : "shadow-[0_0_25px_-10px_rgba(29,184,242,0.25)]";
+
     return (
       <div
-        className={`flex h-full w-full flex-col gap-2 overflow-y-auto rounded-2xl border bg-cap-dark-blue/70 p-4 text-left shadow-sm backdrop-blur-sm transition-colors duration-300 ${
-          completion ? "border-cap-light-blue/40" : "border-white/10"
-        } ${isActive ? "ring-2 ring-cap-light-blue/30" : ""}`}
+        className={`flex h-full w-full flex-col gap-3 overflow-y-auto rounded-3xl border bg-black/40 p-5 text-left backdrop-blur-xl transition-all duration-300 ${glowBorder} ${glowShadow} ${
+          isActive ? "border-cap-light-blue/60" : ""
+        }`}
       >
         <div className="flex w-full items-start justify-between gap-2">
-          <span className="font-semibold text-white">{challenge.title}</span>
-          <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white">
-            {challenge.points} pts
+          <div />
+          <span className="shrink-0 rounded-full border border-cap-light-blue/40 bg-black/30 px-4 py-1 shadow-[0_0_18px_-4px_rgba(29,184,242,0.5)]">
+            <span className="bg-gradient-to-r from-cap-blue to-cap-light-blue bg-clip-text text-lg font-extrabold text-transparent">
+              +{challenge.points}
+            </span>
+            <span className="ml-1 text-[10px] font-bold tracking-wider text-white/50">PTS</span>
           </span>
         </div>
+
+        <div>
+          <h3 className="text-xl font-bold uppercase leading-tight tracking-wide text-white">
+            {challenge.title}
+          </h3>
+          <div className="mt-2 h-0.5 w-12 rounded-full bg-gradient-to-r from-cap-blue to-cap-light-blue" />
+        </div>
+
         {challenge.description && (
-          <p className="line-clamp-3 text-sm text-white/60">{challenge.description}</p>
+          <p className="line-clamp-3 text-sm text-white/50">{challenge.description}</p>
         )}
 
+        <div className="flex-1" />
+
         {completion ? (
-          <div className="mt-1 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
               {completion.photo_url && (
                 <a href={completion.photo_url} target="_blank" rel="noreferrer" className="shrink-0">
@@ -347,25 +365,28 @@ export default function ChallengesPage() {
                   <img
                     src={completion.photo_url}
                     alt={`Evidence for ${challenge.title}`}
-                    className="h-16 w-16 rounded-lg object-cover"
+                    className="h-16 w-16 rounded-xl border border-cap-light-blue/30 object-cover"
                   />
                 </a>
               )}
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-cap-light-blue">
-                  ✓ Completed
+                <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-cap-light-blue">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-cap-light-blue text-[10px] text-cap-dark-blue">
+                    ✓
+                  </span>
+                  Completed
                 </span>
                 <button
                   onClick={() => removeCompletion(challenge)}
                   disabled={isBusy}
-                  className="text-left text-xs text-white/50 underline hover:text-red-400 disabled:opacity-50"
+                  className="text-left text-xs text-white/40 underline hover:text-red-400 disabled:opacity-50"
                 >
                   {isBusy ? "Removing…" : "Remove"}
                 </button>
               </div>
             </div>
             {completion.proof_text && (
-              <p className="whitespace-pre-wrap rounded-lg bg-white/5 p-2 text-xs text-white/70">
+              <p className="whitespace-pre-wrap rounded-xl border border-white/10 bg-black/20 p-2 text-xs text-white/70">
                 {completion.proof_text}
               </p>
             )}
@@ -374,12 +395,23 @@ export default function ChallengesPage() {
           <button
             onClick={() => startFilePick(challenge)}
             disabled={isBusy}
-            className="mt-1 rounded-lg border border-dashed border-cap-light-blue/40 px-3 py-2 text-sm font-semibold text-cap-light-blue hover:opacity-80 disabled:opacity-50"
+            className="flex items-center gap-3 rounded-2xl border border-cap-light-blue/30 bg-black/20 px-4 py-3 text-left transition hover:border-cap-light-blue/60 disabled:opacity-50"
           >
-            {isBusy ? "Uploading…" : "📷 Add photo to complete"}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cap-light-blue/50 text-lg shadow-[0_0_15px_-3px_rgba(29,184,242,0.6)]">
+              📷
+            </span>
+            <span className="h-8 w-px bg-white/10" />
+            <span>
+              <span className="block text-sm font-bold text-white">
+                {isBusy ? "Uploading…" : "Add Photo"}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cap-light-blue/80">
+                to complete
+              </span>
+            </span>
           </button>
         ) : challenge.proof_type === "text" ? (
-          <div className="mt-1 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <textarea
               value={textDrafts[challenge.id] ?? ""}
               onChange={(e) =>
@@ -388,18 +420,18 @@ export default function ChallengesPage() {
               disabled={isBusy}
               rows={2}
               placeholder="Type your answer here..."
-              className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
+              className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
             />
             <button
               onClick={() => completeTextChallenge(challenge)}
               disabled={isBusy}
-              className="rounded-lg bg-cap-light-blue px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-90 disabled:opacity-50"
+              className="rounded-2xl bg-gradient-to-r from-cap-blue to-cap-light-blue px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_-4px_rgba(29,184,242,0.6)] transition hover:opacity-90 disabled:opacity-50"
             >
-              {isBusy ? "Saving…" : "✅ Submit to complete"}
+              {isBusy ? "Saving…" : "Submit to complete"}
             </button>
           </div>
         ) : (
-          <div className="mt-1 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <textarea
               value={textDrafts[challenge.id] ?? ""}
               onChange={(e) =>
@@ -408,21 +440,21 @@ export default function ChallengesPage() {
               disabled={isBusy}
               rows={2}
               placeholder="Type your answer here..."
-              className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
+              className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
             />
             <button
               onClick={() => startFilePick(challenge)}
               disabled={isBusy}
-              className="rounded-lg border border-dashed border-cap-light-blue/40 px-3 py-2 text-sm font-semibold text-cap-light-blue hover:opacity-80 disabled:opacity-50"
+              className="rounded-2xl border border-cap-light-blue/30 bg-black/20 px-4 py-2.5 text-sm font-bold text-cap-light-blue transition hover:border-cap-light-blue/60 disabled:opacity-50"
             >
               {stagedFile ? `📷 ${stagedFile.name}` : "📷 Attach a photo"}
             </button>
             <button
               onClick={() => completeBothChallenge(challenge)}
               disabled={isBusy || !stagedFile || !(textDrafts[challenge.id] ?? "").trim()}
-              className="rounded-lg bg-cap-light-blue px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-90 disabled:opacity-50"
+              className="rounded-2xl bg-gradient-to-r from-cap-blue to-cap-light-blue px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_-4px_rgba(29,184,242,0.6)] transition hover:opacity-90 disabled:opacity-50"
             >
-              {isBusy ? "Saving…" : "✅ Submit to complete"}
+              {isBusy ? "Saving…" : "Submit to complete"}
             </button>
           </div>
         )}
