@@ -27,6 +27,7 @@ export type Participant = {
   name: string;
   team: string | null;
   department: Department;
+  avatar_url: string | null;
   registered_at: string;
 };
 
@@ -44,6 +45,7 @@ export type ParticipantScore = {
   name: string;
   team: string | null;
   department: Department;
+  avatar_url: string | null;
   registered_at: string;
   total_score: number;
   challenges_completed: number;

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { ParticipantScore } from "@/lib/types";
 import { VideoBackground } from "@/components/VideoBackground";
+import { Podium } from "@/components/Podium";
 
 export const revalidate = 0;
 
@@ -12,7 +13,6 @@ export default async function LeaderboardPage() {
     .order("registered_at", { ascending: true });
 
   const scores = (data as ParticipantScore[]) ?? [];
-  const [first, second, third] = scores;
 
   return (
     <div className="min-h-screen">
@@ -27,35 +27,11 @@ export default async function LeaderboardPage() {
           </p>
         ) : (
           <>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {[first, second, third].map((p, i) =>
-                p ? (
-                  <div
-                    key={p.id}
-                    className={`rounded-2xl border p-5 text-center ${
-                      i === 0
-                        ? "border-cap-light-blue bg-cap-blue text-white sm:order-2 sm:scale-105"
-                        : "border-white/15 bg-white/5 text-white"
-                    }`}
-                  >
-                    <p className="text-xs font-bold uppercase tracking-wide opacity-70">
-                      #{i + 1}
-                    </p>
-                    <p className="mt-1 truncate text-lg font-bold">{p.name}</p>
-                    <p className="text-sm opacity-70">
-                      {p.department}
-                      {p.team ? ` · ${p.team}` : ""}
-                    </p>
-                    <p className="mt-2 text-2xl font-extrabold">{p.total_score} pts</p>
-                    <p className="text-xs opacity-70">{p.challenges_completed} challenges</p>
-                  </div>
-                ) : (
-                  <div key={i} className="hidden sm:block" />
-                )
-              )}
+            <div className="mt-10">
+              <Podium scores={scores} />
             </div>
 
-            <div className="mt-10 overflow-x-auto rounded-xl border border-white/10">
+            <div className="mt-14 overflow-x-auto rounded-xl border border-white/10">
               <table className="w-full min-w-[600px] text-left text-sm">
                 <thead className="bg-cap-dark-blue text-white">
                   <tr>
