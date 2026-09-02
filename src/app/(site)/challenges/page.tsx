@@ -12,6 +12,7 @@ import { Disclaimer } from "@/components/Disclaimer";
 import { BadgeShelf } from "@/components/BadgeShelf";
 import { BadgeToast } from "@/components/BadgeToast";
 import { CoverflowCarousel } from "@/components/CoverflowCarousel";
+import { VideoBackground } from "@/components/VideoBackground";
 
 function fireConfetti(particleCount: number) {
   confetti({
@@ -305,8 +306,11 @@ export default function ChallengesPage() {
 
   if (!participant || loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-16 text-center text-cap-dark-blue/60">
-        Loading challenges...
+      <div className="min-h-screen">
+        <VideoBackground />
+        <div className="mx-auto max-w-5xl px-4 py-16 text-center text-white/60">
+          Loading challenges...
+        </div>
       </div>
     );
   }
@@ -320,18 +324,18 @@ export default function ChallengesPage() {
 
     return (
       <div
-        className={`flex h-full w-full flex-col gap-2 overflow-y-auto rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors duration-300 ${
-          completion ? "border-cap-dark-blue/40" : "border-cap-dark-blue/10"
-        } ${isActive ? "ring-2 ring-cap-dark-blue/20" : ""}`}
+        className={`flex h-full w-full flex-col gap-2 overflow-y-auto rounded-2xl border bg-cap-dark-blue/70 p-4 text-left shadow-sm backdrop-blur-sm transition-colors duration-300 ${
+          completion ? "border-cap-light-blue/40" : "border-white/10"
+        } ${isActive ? "ring-2 ring-cap-light-blue/30" : ""}`}
       >
         <div className="flex w-full items-start justify-between gap-2">
-          <span className="font-semibold text-cap-dark-blue">{challenge.title}</span>
-          <span className="shrink-0 rounded-full bg-cap-dark-blue/10 px-2.5 py-0.5 text-xs font-bold text-cap-dark-blue">
+          <span className="font-semibold text-white">{challenge.title}</span>
+          <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-bold text-white">
             {challenge.points} pts
           </span>
         </div>
         {challenge.description && (
-          <p className="line-clamp-3 text-sm text-cap-dark-blue/60">{challenge.description}</p>
+          <p className="line-clamp-3 text-sm text-white/60">{challenge.description}</p>
         )}
 
         {completion ? (
@@ -348,20 +352,20 @@ export default function ChallengesPage() {
                 </a>
               )}
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-cap-dark-blue">
+                <span className="text-xs font-semibold text-cap-light-blue">
                   ✓ Completed
                 </span>
                 <button
                   onClick={() => removeCompletion(challenge)}
                   disabled={isBusy}
-                  className="text-left text-xs text-cap-dark-blue/50 underline hover:text-red-600 disabled:opacity-50"
+                  className="text-left text-xs text-white/50 underline hover:text-red-400 disabled:opacity-50"
                 >
                   {isBusy ? "Removing…" : "Remove"}
                 </button>
               </div>
             </div>
             {completion.proof_text && (
-              <p className="whitespace-pre-wrap rounded-lg bg-cap-dark-blue/5 p-2 text-xs text-cap-dark-blue/70">
+              <p className="whitespace-pre-wrap rounded-lg bg-white/5 p-2 text-xs text-white/70">
                 {completion.proof_text}
               </p>
             )}
@@ -370,7 +374,7 @@ export default function ChallengesPage() {
           <button
             onClick={() => startFilePick(challenge)}
             disabled={isBusy}
-            className="mt-1 rounded-lg border border-dashed border-cap-dark-blue/40 px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-80 disabled:opacity-50"
+            className="mt-1 rounded-lg border border-dashed border-cap-light-blue/40 px-3 py-2 text-sm font-semibold text-cap-light-blue hover:opacity-80 disabled:opacity-50"
           >
             {isBusy ? "Uploading…" : "📷 Add photo to complete"}
           </button>
@@ -384,12 +388,12 @@ export default function ChallengesPage() {
               disabled={isBusy}
               rows={2}
               placeholder="Type your answer here..."
-              className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+              className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
             />
             <button
               onClick={() => completeTextChallenge(challenge)}
               disabled={isBusy}
-              className="rounded-lg bg-cap-dark-blue px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="rounded-lg bg-cap-light-blue px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-90 disabled:opacity-50"
             >
               {isBusy ? "Saving…" : "✅ Submit to complete"}
             </button>
@@ -404,19 +408,19 @@ export default function ChallengesPage() {
               disabled={isBusy}
               rows={2}
               placeholder="Type your answer here..."
-              className="w-full rounded-lg border border-cap-dark-blue/20 px-3 py-2 text-sm outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+              className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
             />
             <button
               onClick={() => startFilePick(challenge)}
               disabled={isBusy}
-              className="rounded-lg border border-dashed border-cap-dark-blue/40 px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-80 disabled:opacity-50"
+              className="rounded-lg border border-dashed border-cap-light-blue/40 px-3 py-2 text-sm font-semibold text-cap-light-blue hover:opacity-80 disabled:opacity-50"
             >
               {stagedFile ? `📷 ${stagedFile.name}` : "📷 Attach a photo"}
             </button>
             <button
               onClick={() => completeBothChallenge(challenge)}
               disabled={isBusy || !stagedFile || !(textDrafts[challenge.id] ?? "").trim()}
-              className="rounded-lg bg-cap-dark-blue px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="rounded-lg bg-cap-light-blue px-3 py-2 text-sm font-semibold text-cap-dark-blue hover:opacity-90 disabled:opacity-50"
             >
               {isBusy ? "Saving…" : "✅ Submit to complete"}
             </button>
@@ -434,7 +438,9 @@ export default function ChallengesPage() {
   const activeChallenges = activeCategory ? grouped.get(activeCategory)! : [];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="min-h-screen">
+      <VideoBackground />
+      <div className="mx-auto max-w-5xl px-4 py-8">
       <input
         ref={fileInputRef}
         type="file"
@@ -445,7 +451,7 @@ export default function ChallengesPage() {
 
       <BadgeToast badges={newBadges} />
 
-      <div className="sticky top-[49px] z-30 mb-5 rounded-2xl bg-cap-dark-blue text-white shadow-lg sm:top-[53px] sm:mb-8">
+      <div className="sticky top-[49px] z-30 mb-5 rounded-2xl bg-cap-dark-blue/90 text-white shadow-lg backdrop-blur-md sm:top-[53px] sm:mb-8">
         <div className="p-4 sm:p-6">
           <p className="text-xs text-white/70 sm:text-sm">Welcome, {participant.name}</p>
           <div className="mt-1.5 flex flex-wrap items-end justify-between gap-3 sm:mt-2 sm:gap-4">
@@ -503,7 +509,7 @@ export default function ChallengesPage() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-6 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
       )}
@@ -517,6 +523,7 @@ export default function ChallengesPage() {
           renderItem={(challenge, { isActive }) => renderCard(challenge, isActive)}
         />
       )}
+      </div>
     </div>
   );
 }

@@ -56,7 +56,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
       <div>
-        <label htmlFor="name" className="mb-1 block text-sm font-medium text-cap-dark-blue">
+        <label htmlFor="name" className="mb-1 block text-sm font-medium text-white/80">
           Your name
         </label>
         <input
@@ -65,21 +65,21 @@ export function RegisterForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Jane Doe"
-          className="w-full rounded-lg border border-cap-dark-blue/20 px-4 py-2.5 text-cap-dark-blue outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+          className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
           required
         />
       </div>
 
       <div>
-        <span className="mb-1 block text-sm font-medium text-cap-dark-blue">Department</span>
+        <span className="mb-1 block text-sm font-medium text-white/80">Department</span>
         <div className="grid grid-cols-2 gap-3">
           {DEPARTMENTS.map((dep) => (
             <label
               key={dep}
               className={`flex cursor-pointer items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-semibold transition ${
                 department === dep
-                  ? "border-cap-blue bg-cap-blue/10 text-cap-blue"
-                  : "border-cap-dark-blue/20 text-cap-dark-blue hover:border-cap-blue/40"
+                  ? "border-cap-light-blue bg-cap-light-blue/10 text-cap-light-blue"
+                  : "border-white/20 text-white/70 hover:border-cap-light-blue/40"
               }`}
             >
               <input
@@ -98,8 +98,8 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="team" className="mb-1 block text-sm font-medium text-cap-dark-blue">
-          Team / domain <span className="font-normal text-cap-dark-blue/50">(optional)</span>
+        <label htmlFor="team" className="mb-1 block text-sm font-medium text-white/80">
+          Team / domain <span className="font-normal text-white/40">(optional)</span>
         </label>
         <input
           id="team"
@@ -107,16 +107,16 @@ export function RegisterForm() {
           value={team}
           onChange={(e) => setTeam(e.target.value)}
           placeholder="e.g. Data & AI"
-          className="w-full rounded-lg border border-cap-dark-blue/20 px-4 py-2.5 text-cap-dark-blue outline-none focus:border-cap-blue focus:ring-2 focus:ring-cap-blue/20"
+          className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-white placeholder:text-white/30 outline-none focus:border-cap-light-blue focus:ring-2 focus:ring-cap-light-blue/20"
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-cap-blue px-4 py-2.5 font-semibold text-white transition hover:bg-cap-dark-blue disabled:opacity-60"
+        className="w-full rounded-lg bg-cap-light-blue px-4 py-2.5 font-semibold text-cap-dark-blue transition hover:bg-white disabled:opacity-60"
       >
         {loading ? "Joining..." : "Join the Challenge"}
       </button>

@@ -7,8 +7,8 @@ export function GalleryTabs({ active }: { active: "all" | "mine" }) {
         href="/gallery"
         className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
           active === "all"
-            ? "bg-cap-dark-blue text-white"
-            : "bg-cap-dark-blue/5 text-cap-dark-blue hover:bg-cap-dark-blue/10"
+            ? "bg-white text-cap-dark-blue"
+            : "bg-white/10 text-white hover:bg-white/20"
         }`}
       >
         Everyone
@@ -17,8 +17,8 @@ export function GalleryTabs({ active }: { active: "all" | "mine" }) {
         href="/gallery/mine"
         className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
           active === "mine"
-            ? "bg-cap-dark-blue text-white"
-            : "bg-cap-dark-blue/5 text-cap-dark-blue hover:bg-cap-dark-blue/10"
+            ? "bg-white text-cap-dark-blue"
+            : "bg-white/10 text-white hover:bg-white/20"
         }`}
       >
         My photos

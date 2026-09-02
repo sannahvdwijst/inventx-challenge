@@ -34,7 +34,7 @@ export function PhotoGrid({ photos }: { photos: GalleryPhoto[] }) {
           <button
             key={photo.id}
             onClick={() => setActiveIndex(i)}
-            className="group relative aspect-square overflow-hidden bg-cap-dark-blue/5"
+            className="group relative aspect-square overflow-hidden bg-white/5"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
