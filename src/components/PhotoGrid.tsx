@@ -29,20 +29,24 @@ export function PhotoGrid({ photos }: { photos: GalleryPhoto[] }) {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-0.5 sm:grid-cols-4 sm:gap-1 md:grid-cols-5">
+      <div className="columns-2 gap-3 sm:columns-3 md:columns-4">
         {photos.map((photo, i) => (
           <button
             key={photo.id}
             onClick={() => setActiveIndex(i)}
-            className="group relative aspect-square overflow-hidden bg-white/5"
+            className="group relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-cap-light-blue/20 bg-white/5 shadow-[0_0_20px_-10px_rgba(29,184,242,0.3)] transition hover:border-cap-light-blue/50"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={photo.photoUrl}
               alt={`${photo.challengeTitle} — ${photo.participantName}`}
               loading="lazy"
-              className="h-full w-full object-cover transition duration-200 group-hover:scale-105 group-hover:opacity-90"
+              className="block h-auto w-full object-cover transition duration-300 group-hover:scale-105"
             />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8 text-left opacity-0 transition group-hover:opacity-100">
+              <p className="truncate text-xs font-bold text-white">{photo.participantName}</p>
+              <p className="truncate text-[11px] text-white/60">{photo.challengeTitle}</p>
+            </div>
           </button>
         ))}
       </div>
