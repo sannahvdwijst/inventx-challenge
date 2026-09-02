@@ -66,7 +66,7 @@ export function AstronautWaving({ className = "" }: { className?: string }) {
 
 export function AstronautDancing({ className = "" }: { className?: string }) {
   return (
-    <div className={`animate-astronaut-disco ${className}`}>
+    <div className={`animate-astronaut-jump ${className}`}>
       <svg viewBox="0 0 100 110" className="h-full w-full" aria-hidden>
         <HelmetAndBody
           hideLegs
@@ -74,14 +74,14 @@ export function AstronautDancing({ className = "" }: { className?: string }) {
             <rect x="37" y="30" width="26" height="7" rx="3.5" fill="#0b1130" />
           }
         />
-        {/* disco point: one arm up, one arm down */}
-        <rect x="66" y="30" width="11" height="26" rx="5.5" fill={SUIT} transform="rotate(-60 66 30)" />
-        <circle cx="82" cy="16" r="7" fill={SUIT} />
-        <rect x="23" y="56" width="11" height="26" rx="5.5" fill={SUIT} transform="rotate(-60 34 56)" />
-        <circle cx="18" cy="80" r="7" fill={SUIT} />
-        {/* stepped-out legs */}
-        <rect x="34" y="82" width="11" height="18" rx="5.5" fill={SUIT} transform="rotate(-12 34 82)" />
-        <rect x="53" y="82" width="11" height="18" rx="5.5" fill={SUIT} transform="rotate(10 64 82)" />
+        {/* both arms straight up */}
+        <rect x="60" y="14" width="11" height="30" rx="5.5" fill={SUIT} />
+        <circle cx="65.5" cy="12" r="7" fill={SUIT} />
+        <rect x="29" y="14" width="11" height="30" rx="5.5" fill={SUIT} />
+        <circle cx="34.5" cy="12" r="7" fill={SUIT} />
+        {/* legs together, mid-jump */}
+        <rect x="38" y="82" width="12" height="18" rx="6" fill={SUIT} />
+        <rect x="50" y="82" width="12" height="18" rx="6" fill={SUIT} />
       </svg>
     </div>
   );
