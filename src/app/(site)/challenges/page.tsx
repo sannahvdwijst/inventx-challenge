@@ -351,7 +351,7 @@ export default function ChallengesPage() {
         </div>
 
         {challenge.description && (
-          <p className="line-clamp-3 text-sm text-white/50">{challenge.description}</p>
+          <p className="text-sm text-white/50">{challenge.description}</p>
         )}
 
         <div className="flex-1" />

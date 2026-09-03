@@ -17,10 +17,14 @@ interface Size {
   spacing: number;
 }
 
-function computeSize(viewportWidth: number): Size {
+function computeSize(viewportWidth: number, viewportHeight: number): Size {
   const isMobile = viewportWidth < 640;
-  const cardWidth = isMobile ? Math.min(220, viewportWidth - 120) : 300;
-  const cardHeight = isMobile ? 280 : 360;
+  const cardWidth = isMobile ? Math.min(270, viewportWidth - 100) : 300;
+  // Cards need to be tall enough to fit a full title + description without
+  // clipping, but not taller than the screen has room for.
+  const cardHeight = isMobile
+    ? Math.min(460, Math.max(360, viewportHeight - 380))
+    : 400;
   const spacing = cardWidth * 0.62;
   return { cardWidth, cardHeight, spacing };
 }
@@ -56,20 +60,22 @@ export function CoverflowCarousel<T>({
   const currentIndexRef = useRef(0);
   const draggingRef = useRef(false);
   const dragStartX = useRef(0);
+  const dragStartY = useRef(0);
   const dragStartPos = useRef(0);
+  const dragIntentRef = useRef<"unknown" | "horizontal" | "vertical">("unknown");
   const lastMoveRef = useRef<{ x: number; t: number } | null>(null);
   const velocityRef = useRef(0);
   const wheelLockRef = useRef(0);
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [size, setSize] = useState<Size>(() => computeSize(1024));
+  const [size, setSize] = useState<Size>(() => computeSize(1024, 800));
 
   const count = items.length;
 
   useEffect(() => {
     function handleResize() {
       const w = viewportRef.current?.clientWidth ?? window.innerWidth;
-      setSize(computeSize(w));
+      setSize(computeSize(w, window.innerHeight));
     }
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -151,18 +157,36 @@ export function CoverflowCarousel<T>({
 
   function onPointerDown(e: React.PointerEvent) {
     if (count < 2) return;
-    draggingRef.current = true;
+    // Don't start dragging or capture the pointer yet — a touch that turns
+    // out to be a vertical scroll (e.g. reading a long description) needs
+    // to reach the card's own scroll container untouched.
+    dragIntentRef.current = "unknown";
     dragStartX.current = e.clientX;
+    dragStartY.current = e.clientY;
     dragStartPos.current = positionProxy.current.pos;
     lastMoveRef.current = { x: e.clientX, t: performance.now() };
     velocityRef.current = 0;
-    gsap.killTweensOf(positionProxy.current);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
   function onPointerMove(e: React.PointerEvent) {
-    if (!draggingRef.current) return;
+    if (dragIntentRef.current === "vertical") return;
+
     const deltaX = e.clientX - dragStartX.current;
+    const deltaY = e.clientY - dragStartY.current;
+
+    if (dragIntentRef.current === "unknown") {
+      if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6) return;
+      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+        dragIntentRef.current = "horizontal";
+        draggingRef.current = true;
+        gsap.killTweensOf(positionProxy.current);
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      } else {
+        dragIntentRef.current = "vertical";
+        return;
+      }
+    }
+
     const newPos = dragStartPos.current - (deltaX / size.spacing) * DRAG_SENSITIVITY;
     positionProxy.current.pos = newPos;
     applyTransforms(newPos);
@@ -179,8 +203,10 @@ export function CoverflowCarousel<T>({
   }
 
   function onPointerUp() {
-    if (!draggingRef.current) return;
+    const wasDragging = draggingRef.current;
     draggingRef.current = false;
+    dragIntentRef.current = "unknown";
+    if (!wasDragging) return;
     const momentum = velocityRef.current * MOMENTUM_MULTIPLIER * 16;
     const projected = positionProxy.current.pos + momentum;
     goToIndex(Math.round(projected));
